@@ -34,14 +34,6 @@
     build && "$DEVENV_ROOT/build/silnik" "$@"
   '';
 
-  # Linter: `lint` sprawdza, `lint --fix` dodatkowo poprawia co się da
-  scripts.lint.exec = ''
-    [ -f "$DEVENV_ROOT/build/compile_commands.json" ] || build
-    fix=""
-    [ "$1" = "--fix" ] && fix="-fix"
-    run-clang-tidy -quiet -p "$DEVENV_ROOT/build" $fix "$DEVENV_ROOT/src/"
-  '';
-
   # Formatowanie wszystkich plików według .clang-format
   scripts.fmt.exec = ''
     find "$DEVENV_ROOT/src" -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \
@@ -66,7 +58,6 @@
     echo "Silnik 2D (raylib ${pkgs.raylib.version})"
     echo "  build  - konfiguracja i kompilacja"
     echo "  run    - kompilacja i uruchomienie"
-    echo "  lint   - linter clang-tidy (lint --fix poprawia)"
     echo "  fmt    - formatowanie kodu (styl Google)"
     echo "  docs   - dokumentacja Doxygen"
     echo "  edit   - otwarcie projektu w Zedzie"
