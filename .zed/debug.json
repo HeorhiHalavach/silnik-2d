@@ -1,0 +1,14 @@
+// Konfiguracja debugera (F4 lub panel Debug). Przed startem projekt jest budowany.
+[
+  {
+    "label": "Debuguj silnik (gdb)",
+    "adapter": "GDB",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/build/silnik",
+    "cwd": "$ZED_WORKTREE_ROOT/build",
+    "build": {
+      "command": "build",
+      "cwd": "$ZED_WORKTREE_ROOT"
+    }
+  }
+]

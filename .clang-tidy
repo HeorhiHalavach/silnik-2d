@@ -1,0 +1,64 @@
+# Linter C++ (clang-tidy) zgodny z Google C++ Style Guide.
+# clangd w Zedzie uruchamia go na bieżąco; w terminalu: `lint`.
+---
+Checks: >
+  -*,
+  google-*,
+  bugprone-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  misc-*,
+  -google-readability-todo,
+  -bugprone-easily-swappable-parameters,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-magic-numbers,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-avoid-do-while,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -misc-non-private-member-variables-in-classes,
+  -misc-include-cleaner,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length,
+  -readability-braces-around-statements,
+  -google-readability-braces-around-statements
+
+# Ostrzeżenia nie przerywają kompilacji ani `lint`
+WarningsAsErrors: ''
+
+# Sprawdzaj tylko własne nagłówki, nie raylib
+HeaderFilterRegex: '.*/src/.*'
+
+CheckOptions:
+  # Nazewnictwo według Google C++ Style Guide
+  - { key: readability-identifier-naming.NamespaceCase,          value: lower_case }
+  - { key: readability-identifier-naming.ClassCase,              value: CamelCase  }
+  - { key: readability-identifier-naming.StructCase,             value: CamelCase  }
+  - { key: readability-identifier-naming.EnumCase,               value: CamelCase  }
+  - { key: readability-identifier-naming.TypeAliasCase,          value: CamelCase  }
+  - { key: readability-identifier-naming.TemplateParameterCase,  value: CamelCase  }
+  - { key: readability-identifier-naming.FunctionCase,           value: CamelCase  }
+  - { key: readability-identifier-naming.MethodCase,             value: CamelCase  }
+  - { key: readability-identifier-naming.VariableCase,           value: lower_case }
+  - { key: readability-identifier-naming.ParameterCase,          value: lower_case }
+  - { key: readability-identifier-naming.MemberCase,             value: lower_case }
+  # składowe prywatne i chronione klas: nazwa_
+  - { key: readability-identifier-naming.PrivateMemberSuffix,    value: _          }
+  - { key: readability-identifier-naming.ProtectedMemberSuffix,  value: _          }
+  # składowe struktur (public) bez podkreślnika
+  - { key: readability-identifier-naming.PublicMemberSuffix,     value: ''         }
+  # stałe: kNazwaStalej
+  - { key: readability-identifier-naming.ConstexprVariableCase,  value: CamelCase  }
+  - { key: readability-identifier-naming.ConstexprVariablePrefix, value: k         }
+  - { key: readability-identifier-naming.GlobalConstantCase,     value: CamelCase  }
+  - { key: readability-identifier-naming.GlobalConstantPrefix,   value: k          }
+  - { key: readability-identifier-naming.StaticConstantCase,     value: CamelCase  }
+  - { key: readability-identifier-naming.StaticConstantPrefix,   value: k          }
+  - { key: readability-identifier-naming.EnumConstantCase,       value: CamelCase  }
+  - { key: readability-identifier-naming.EnumConstantPrefix,     value: k          }
+  - { key: readability-identifier-naming.MacroDefinitionCase,    value: UPPER_CASE }
+  # funkcja main i wywołania API raylib nie podlegają regułom
+  - { key: readability-identifier-naming.FunctionIgnoredRegexp,  value: '^main$'   }
+  - { key: readability-function-cognitive-complexity.Threshold,  value: 30         }

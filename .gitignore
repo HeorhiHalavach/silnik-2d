@@ -1,0 +1,16 @@
+# devenv / direnv
+.devenv/
+.direnv/
+devenv.local.nix
+.pre-commit-config.yaml
+
+# build
+build/
+compile_commands.json
+.cache/
+
+# Doxygen
+docs/html/
+docs/latex/
+html/
+latex/

@@ -1,0 +1,59 @@
+// Ustawienia Zeda dla tego projektu (nadpisują ustawienia użytkownika).
+{
+  // Zed wczytuje środowisko devenv przez direnv, więc clangd, gdb
+  // i serwery LSP pochodzą z Nixa, a nie z pobranych binarek.
+  "load_direnv": "direct",
+
+  // Rozszerzenia instalowane automatycznie po otwarciu projektu.
+  // C/C++ obsługuje Zed natywnie (clangd), więc nie wymaga rozszerzenia.
+  "auto_install_extensions": {
+    "nix": true,   // devenv.nix
+    "cmake": true  // CMakeLists.txt
+  },
+
+  "languages": {
+    // Formatowanie robi clangd według .clang-format (styl Google).
+    // tab_size i preferred_line_length muszą się z nim zgadzać,
+    // żeby wcięcia przy pisaniu nie różniły się od tych po zapisie.
+    "C++": {
+      "tab_size": 2,
+      "preferred_line_length": 80,
+      "format_on_save": "on",
+      "formatter": "language_server"
+    },
+    "C": {
+      "tab_size": 2,
+      "preferred_line_length": 80,
+      "format_on_save": "on",
+      "formatter": "language_server"
+    },
+    "Nix": {
+      "tab_size": 2,
+      "language_servers": ["nixd", "!nil"]
+    }
+  },
+
+  "lsp": {
+    "clangd": {
+      "binary": {
+        // Szukaj clangd w PATH (devenv) zamiast pobierać własny
+        "ignore_system_version": false,
+        "arguments": [
+          "--background-index",
+          "--clang-tidy",
+          "--header-insertion=iwyu",
+          "--compile-commands-dir=build"
+        ]
+      }
+    }
+  },
+
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.devenv",
+    "**/.direnv",
+    "**/build",
+    "**/html",
+    "**/latex"
+  ]
+}
