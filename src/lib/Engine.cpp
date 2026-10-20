@@ -2,35 +2,87 @@
 
 #include <iostream>
 
-bool Engine::Init(const EngineConfig& config) {
-    cfg_ = config;
-    if (!cfg_.logFile.empty()) log_.open(cfg_.logFile);
+// --- konfiguracja okna: przed Init() zapisuje ustawienia, po Init() zmienia okno ---
 
-    if (auto* w = std::get_if<Windowed>(&cfg_.mode)) {
-        ::InitWindow(w->width, w->height, cfg_.title.c_str());
-    } else {
+Engine& Engine::Title(std::string title) {
+    title_ = std::move(title);
+    if (initialized_) ::SetWindowTitle(title_.c_str());
+    return *this;
+}
+
+Engine& Engine::Window(int width, int height) {
+    width_ = width;
+    height_ = height;
+    fullscreen_ = false;
+    if (initialized_) {
+        if (::IsWindowFullscreen()) ::ToggleFullscreen();
+        ::SetWindowSize(width_, height_);
+    }
+    return *this;
+}
+
+Engine& Engine::Fullscreen(bool value) {
+    fullscreen_ = value;
+    if (initialized_ && ::IsWindowFullscreen() != value) ::ToggleFullscreen();
+    return *this;
+}
+
+Engine& Engine::Fps(int fps) {
+    fps_ = fps;
+    if (initialized_) ::SetTargetFPS(fps_);
+    return *this;
+}
+
+// --- cykl życia ---
+
+Engine& Engine::Init() {
+    if (initialized_) return *this;
+    if (!logFile_.empty()) log_.open(logFile_);
+
+    if (fullscreen_) {
         ::SetConfigFlags(FLAG_FULLSCREEN_MODE);
-        ::InitWindow(0, 0, cfg_.title.c_str());
+        ::InitWindow(0, 0, title_.c_str());
+    } else {
+        ::InitWindow(width_, height_, title_.c_str());
     }
 
     if (!::IsWindowReady()) {
         Log("BLAD: nie udalo sie utworzyc okna");
-        return false;
+        return *this;
     }
 
-    ::SetTargetFPS(cfg_.fps);
+    ::SetTargetFPS(fps_);
     initialized_ = true;
     Log("Silnik zainicjalizowany");
-    return true;
+    return *this;
 }
 
-void Engine::Run(const std::function<void(float)>& update, const std::function<void()>& draw) {
+int Engine::Run() {
+    if (!Init().Ready()) return 1;
+    CreateRegisteredScenes();
+
     while (!::WindowShouldClose()) {
-        update(::GetFrameTime());
+        const float dt = ::GetFrameTime();
+        Scene* scene = active_.empty() ? nullptr : &scenes_.at(active_);
+
+        if (update_) update_(dt);
+        if (scene) scene->Update(dt, input_);
+
         ::BeginDrawing();
-        draw();
+        ::ClearBackground(background_);
+        if (scene) scene->Draw(primitives_);
+        if (draw_) draw_(primitives_.Reset());
         ::EndDrawing();
+
+        if (!pending_.empty()) {
+            active_ = std::move(pending_);
+            pending_.clear();
+            Log("Scena: " + active_);
+        }
     }
+
+    Shutdown();
+    return 0;
 }
 
 void Engine::Shutdown() {
@@ -40,13 +92,63 @@ void Engine::Shutdown() {
     initialized_ = false;
 }
 
-void Engine::Clear(RenderTexture2D& target, Color color) {
+// --- sceny ---
+
+Scene& Engine::CreateScene(const std::string& name) {
+    auto [it, created] = scenes_.try_emplace(name);
+    if (!created) Log("UWAGA: scena \"" + name + "\" juz istnieje");
+    if (active_.empty()) active_ = name;
+    return it->second;
+}
+
+Engine& Engine::CreateScene(const std::string& name, const std::function<void(Scene&)>& setup) {
+    setup(CreateScene(name));
+    return *this;
+}
+
+Engine& Engine::RegisterScene(std::string name, std::function<void(Scene&)> setup) {
+    registered_[std::move(name)] = std::move(setup);
+    return *this;
+}
+
+// Tworzy sceny zarejestrowane makrem SCENE i ustawia scenę startową.
+// Kolejność rejestracji między plikami jest nieokreślona, dlatego scena startowa
+// pochodzi z StartScene(), a nie z tego, która zarejestrowała się pierwsza.
+void Engine::CreateRegisteredScenes() {
+    for (auto& [name, setup] : registered_)
+        setup(CreateScene(name));
+    registered_.clear();
+
+    if (!start_.empty()) {
+        if (scenes_.contains(start_))
+            active_ = start_;
+        else
+            Log("BLAD: nie ma sceny startowej \"" + start_ + "\"");
+    } else if (scenes_.size() > 1) {
+        Log("UWAGA: brak StartScene(), startowa scena: \"" + active_ + "\"");
+    }
+}
+
+Engine& Engine::SwitchScene(const std::string& name) {
+    if (!scenes_.contains(name)) {
+        Log("BLAD: nie ma sceny \"" + name + "\"");
+        return *this;
+    }
+    if (name != active_) pending_ = name;
+    return *this;
+}
+
+// --- grafika i diagnostyka ---
+
+Engine& Engine::Clear(RenderTexture2D& target, Color color) {
     ::BeginTextureMode(target);
     ::ClearBackground(color);
     ::EndTextureMode();
+    return *this;
 }
 
-void Engine::Log(const std::string& message) {
+Engine& Engine::Log(const std::string& message) {
     std::cerr << message << '\n';
     if (log_.is_open()) log_ << message << std::endl;
+    return *this;
 }

@@ -1,29 +1,25 @@
-#include "./lib/Engine.hpp"
+#include "lib/Engine.hpp"
 
+// Sceny rejestrują się same - patrz SCENE(...) w src/scenes/*.cpp
 int main() {
-    Engine& engine = Engine::Get();
+    Engine& engine = Engine::Get()
+                         .Title("Lab 2 - prymitywy")
+                         .Window(1000, 700) // albo .Fullscreen()
+                         .Background(RAYWHITE)
+                         .StartScene("menu")
+                         .Init();
 
-    EngineConfig config;
-    config.title = "Demo";
-    config.mode = Windowed{800, 600}; // albo Fullscreen{}
+    if (!engine.Ready()) return 1;
 
-    if (!engine.Init(config)) return 1;
-
-    Vector2 player{400, 300};
-
-    engine.Run(
-        [&](float dt) {
-            if (engine.KeyDown(KEY_RIGHT)) player.x += 200 * dt;
-            if (engine.KeyDown(KEY_LEFT)) player.x -= 200 * dt;
-            if (engine.KeyDown(KEY_DOWN)) player.y += 200 * dt;
-            if (engine.KeyDown(KEY_UP)) player.y -= 200 * dt;
-            if (engine.MouseDown(MOUSE_BUTTON_LEFT)) player = engine.MousePosition();
-        },
-        [&]() {
-            engine.Clear(DARKGRAY);
-            DrawCircleV(player, 20, ORANGE);
-        });
-
-    engine.Shutdown();
-    return 0;
+    // logika globalna: działa w każdej scenie
+    return engine
+        .OnUpdate([&](float) {
+            if (engine.KeyPressed(KEY_ONE)) engine.SwitchScene("menu");
+            if (engine.KeyPressed(KEY_TWO)) engine.SwitchScene("prymitywy");
+        })
+        .OnDraw([&](PrimitiveRenderer&) {
+            ::DrawText(("Scena: " + engine.ActiveScene() + "   [1] menu  [2] prymitywy").c_str(),
+                       20, 665, 20, DARKGRAY);
+        })
+        .Run();
 }
