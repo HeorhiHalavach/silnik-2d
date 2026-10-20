@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "lib/Engine.hpp"
 
 SCENE("prymitywy") {
@@ -17,7 +19,15 @@ SCENE("prymitywy") {
             if (engine.KeyDown(KEY_UP)) position.y -= speed;
             self.Position(position);
         })
-        .OnKeyPressed(KEY_L, [](Rect& self) { self.Layer(self.Layer() == 0 ? 1 : 0); });
+        .OnKeyPressed(KEY_L, [](Rect& self) { self.Layer(self.Layer() == 0 ? 1 : 0); })
+        // dzieci jadą razem z prostokątem - ich pozycje są względem niego
+        .Children([](Rect& self) {
+            self.Spawn<Circle>().Position({30, 30}).Radius(10).Paint(WHITE).Fill();
+            self.Spawn<Rect>().Position({70, 45}).Size({40, 25}).Paint(YELLOW).Fill().Children(
+                [](Rect& self) { // wnuk: względem żółtego prostokąta
+                    self.Spawn<Circle>().Position({20, 12}).Radius(5).Paint(RED).Fill();
+                });
+        });
 
     scene.Spawn<Rect>().Position({190, 60}).Size({120, 80}).Paint(SKYBLUE).Fill();
 
@@ -69,6 +79,27 @@ SCENE("prymitywy") {
             incremental = !incremental;
             self.Incremental(incremental).Paint(incremental ? RED : BLUE);
         });
+
+    // układ słoneczny: planeta krąży wokół słońca, księżyc (dziecko planety) wokół planety
+    scene.Spawn<Group>().Position({880, 420}).Children([](Group& system) {
+        system.Spawn<Circle>().Radius(18).Paint(ORANGE).Fill(); // słońce w środku grupy
+
+        system.Spawn<Circle>()
+            .Radius(10)
+            .Paint(SKYBLUE)
+            .Fill()
+            .OnUpdate([angle = 0.0f](Circle& self, float dt) mutable {
+                angle += dt;
+                self.Position({50 * std::cos(angle), 50 * std::sin(angle)});
+            })
+            .Children([](Circle& planet) {
+                planet.Spawn<Circle>().Radius(4).Paint(GRAY).Fill().OnUpdate(
+                    [angle = 0.0f](Circle& self, float dt) mutable {
+                        angle += 4 * dt;
+                        self.Position({18 * std::cos(angle), 18 * std::sin(angle)});
+                    });
+            });
+    });
 
     scene.OnDraw([](PrimitiveRenderer&) {
         ::DrawText("strzalki - prostokat, L - warstwa, PPM - odcinek, "

@@ -11,7 +11,11 @@
 #include "Input.hpp"
 #include "PrimitiveRenderer.hpp"
 
-// Baza wszystkich obiektów sceny. Obsługuje zdarzenia:
+// Baza wszystkich obiektów sceny. Obiekty tworzą drzewo: każdy może mieć dzieci
+// (Spawn<T>()), a dzieci kolejne dzieci. Pozycja dziecka jest względna wobec rodzica,
+// więc przesunięcie rodzica przesuwa całe poddrzewo.
+//
+// Zdarzenia:
 //   OnUpdate     - co klatkę
 //   OnClick      - kliknięcie lewym przyciskiem myszy na obiekcie
 //   OnMouseEnter - kursor wszedł na obiekt
@@ -21,18 +25,85 @@
 class Entity {
   public:
     virtual ~Entity() = default;
-    virtual void Draw(PrimitiveRenderer& renderer) const = 0;
 
-    // czy punkt (np. kursor) leży na obiekcie - potrzebne do zdarzeń myszy
-    virtual bool Contains(Vector2 point) const = 0;
+    // dziecko tego obiektu; zwraca referencję do dziecka, żeby je skonfigurować
+    template <typename T> T& Spawn() {
+        auto child = std::make_unique<T>();
+        T& ref = *child;
+        child->parent_ = this;
+        children_.push_back(std::move(child));
+        return ref;
+    }
 
+    // pozycja względem rodzica oraz wynikowa pozycja na ekranie
+    Vector2 Position() const { return position_; }
+    Vector2 WorldPosition() const {
+        if (!parent_) return position_;
+        const Vector2 origin = parent_->WorldPosition();
+        return {origin.x + position_.x, origin.y + position_.y};
+    }
+
+    Entity* Parent() const { return parent_; }
     bool Hovered() const { return hovered_; }
 
-    // warstwa: wyższa rysowana jest na wierzchu, domyślnie 0
+    // warstwa: wyższa rysowana jest na wierzchu, domyślnie 0.
+    // Działa między rodzeństwem - dzieci zawsze rysowane są nad swoim rodzicem.
     int Layer() const { return layer_; }
 
-    // wywoływane przez scenę co klatkę: sprawdza zdarzenia i woła podpięte funkcje
+    // czy punkt na ekranie (np. kursor) leży na obiekcie - potrzebne do zdarzeń myszy
+    virtual bool Contains(Vector2 point) const = 0;
+
+    // co klatkę: zdarzenia tego obiektu, potem jego dzieci
     void Update(float dt, const Input& input) {
+        HandleEvents(dt, input);
+        // pętla po indeksie: zdarzenie może wywołać Spawn() i powiększyć wektor
+        for (std::size_t i = 0; i < children_.size(); ++i)
+            children_[i]->Update(dt, input);
+    }
+
+    // rysuje obiekt, a nad nim jego dzieci (wg warstw)
+    void Render(PrimitiveRenderer& renderer) const {
+        renderer.Reset();
+        Draw(renderer);
+        for (const Entity* child : ByLayer(children_))
+            child->Render(renderer);
+    }
+
+    // kolejność rysowania: od najniższej warstwy, w tej samej - w kolejności dodania
+    static std::vector<const Entity*> ByLayer(const std::vector<std::unique_ptr<Entity>>& list) {
+        std::vector<const Entity*> order;
+        order.reserve(list.size());
+        for (const auto& entity : list)
+            order.push_back(entity.get());
+        std::stable_sort(order.begin(), order.end(),
+                         [](const Entity* a, const Entity* b) { return a->Layer() < b->Layer(); });
+        return order;
+    }
+
+  protected:
+    // sam kształt, bez dzieci; współrzędne ekranu liczy się przez World()
+    virtual void Draw(PrimitiveRenderer& renderer) const = 0;
+
+    // punkt lokalny (względem pozycji obiektu) -> punkt na ekranie
+    Vector2 World(Vector2 local) const {
+        const Vector2 origin = WorldPosition();
+        return {origin.x + local.x, origin.y + local.y};
+    }
+
+    Vector2 position_{};
+    Color color_ = BLACK;
+    bool filled_ = false;
+    bool hovered_ = false;
+    int layer_ = 0;
+
+    std::function<void(float)> update_;
+    std::function<void()> click_;
+    std::function<void()> mouseEnter_;
+    std::function<void()> mouseLeave_;
+    std::vector<std::pair<int, std::function<void()>>> keys_;
+
+  private:
+    void HandleEvents(float dt, const Input& input) {
         if (input.MouseEnabled()) {
             const bool inside = Contains(input.MousePosition());
             if (inside && !hovered_ && mouseEnter_) mouseEnter_();
@@ -45,36 +116,48 @@ class Entity {
         if (update_) update_(dt);
     }
 
-  protected:
-    Color color_ = BLACK;
-    bool filled_ = false;
-    bool hovered_ = false;
-    int layer_ = 0;
-
-    std::function<void(float)> update_;
-    std::function<void()> click_;
-    std::function<void()> mouseEnter_;
-    std::function<void()> mouseLeave_;
-    std::vector<std::pair<int, std::function<void()>>> keys_;
+    Entity* parent_ = nullptr;
+    std::vector<std::unique_ptr<Entity>> children_;
 };
 
 // Wspólne settery i zdarzenia. Zwracają T&, żeby łańcuch nie "zgubił" typu,
 // a funkcje zdarzeń dostają obiekt jako T&, np.:
 //
 //   scene.Spawn<Circle>().Radius(30).OnClick([](Circle& self) { self.Radius(50); });
+//
+// Dzieci można dodać w łańcuchu przez Children():
+//
+//   scene.Spawn<Rect>().Position({100, 100}).Size({200, 100}).Children([](Rect& self) {
+//       self.Spawn<Circle>().Position({20, 20}).Radius(10);   // względem prostokąta
+//   });
 template <typename T> class Shape : public Entity {
   public:
+    using Entity::Position; // getter Position() z Entity, inaczej przesłoniłby go setter
+    T& Position(Vector2 position) {
+        position_ = position;
+        return Self();
+    }
+    T& Move(Vector2 offset) {
+        position_ = {position_.x + offset.x, position_.y + offset.y};
+        return Self();
+    }
     T& Paint(Color color) {
         color_ = color;
         return Self();
     }
-    using Entity::Layer; // getter Layer() z Entity, inaczej przesłoniłby go setter poniżej
+    using Entity::Layer; // jak wyżej
     T& Layer(int layer) {
         layer_ = layer;
         return Self();
     }
     T& Fill(bool value = true) {
         filled_ = value;
+        return Self();
+    }
+
+    // dzieci w łańcuchu: setup dostaje ten obiekt, a Children() zwraca go dalej
+    T& Children(const std::function<void(T&)>& setup) {
+        setup(Self());
         return Self();
     }
 
@@ -108,6 +191,16 @@ template <typename T> class Shape : public Entity {
     }
 };
 
+// Pusty obiekt bez kształtu - "uchwyt" do grupowania dzieci (np. cała postać z kilku figur)
+class Group : public Shape<Group> {
+  public:
+    bool Contains(Vector2) const override { return false; }
+
+  protected:
+    void Draw(PrimitiveRenderer&) const override {}
+};
+
+// From / To względem pozycji obiektu
 class Line : public Shape<Line> {
   public:
     Line& From(Vector2 position) {
@@ -123,14 +216,16 @@ class Line : public Shape<Line> {
         return *this;
     }
 
-    void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Incremental(incremental_).Line(from_, to_);
-    }
     bool Contains(Vector2 point) const override {
-        return ::CheckCollisionPointLine(point, from_, to_, kHitDistance);
+        return ::CheckCollisionPointLine(point, World(from_), World(to_), kHitDistance);
     }
 
     static constexpr int kHitDistance = 4; // tolerancja trafienia w odcinek [px]
+
+  protected:
+    void Draw(PrimitiveRenderer& renderer) const override {
+        renderer.Paint(color_).Incremental(incremental_).Line(World(from_), World(to_));
+    }
 
   private:
     Vector2 from_{};
@@ -138,56 +233,50 @@ class Line : public Shape<Line> {
     bool incremental_ = false;
 };
 
-// position = lewy górny róg
+// pozycja = lewy górny róg
 class Rect : public Shape<Rect> {
   public:
-    Rect& Position(Vector2 position) {
-        position_ = position;
-        return *this;
-    }
     Rect& Size(Vector2 size) {
         size_ = size;
         return *this;
     }
-    Vector2 Position() const { return position_; }
 
-    void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Fill(filled_).Rect(position_, size_);
-    }
     bool Contains(Vector2 point) const override {
-        return ::CheckCollisionPointRec(point, {position_.x, position_.y, size_.x, size_.y});
+        const Vector2 corner = WorldPosition();
+        return ::CheckCollisionPointRec(point, {corner.x, corner.y, size_.x, size_.y});
+    }
+
+  protected:
+    void Draw(PrimitiveRenderer& renderer) const override {
+        renderer.Paint(color_).Fill(filled_).Rect(WorldPosition(), size_);
     }
 
   private:
-    Vector2 position_{};
     Vector2 size_{10, 10};
 };
 
-// position = środek
+// pozycja = środek
 class Circle : public Shape<Circle> {
   public:
-    Circle& Position(Vector2 position) {
-        position_ = position;
-        return *this;
-    }
     Circle& Radius(float radius) {
         radius_ = radius;
         return *this;
     }
-    Vector2 Position() const { return position_; }
 
-    void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Fill(filled_).Circle(position_, radius_);
-    }
     bool Contains(Vector2 point) const override {
-        return ::CheckCollisionPointCircle(point, position_, radius_);
+        return ::CheckCollisionPointCircle(point, WorldPosition(), radius_);
+    }
+
+  protected:
+    void Draw(PrimitiveRenderer& renderer) const override {
+        renderer.Paint(color_).Fill(filled_).Circle(WorldPosition(), radius_);
     }
 
   private:
-    Vector2 position_{};
     float radius_ = 10.0f;
 };
 
+// wierzchołki względem pozycji obiektu
 class Triangle : public Shape<Triangle> {
   public:
     Triangle& Vertices(Vector2 a, Vector2 b, Vector2 c) {
@@ -197,11 +286,13 @@ class Triangle : public Shape<Triangle> {
         return *this;
     }
 
-    void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Fill(filled_).Triangle(a_, b_, c_);
-    }
     bool Contains(Vector2 point) const override {
-        return ::CheckCollisionPointTriangle(point, a_, b_, c_);
+        return ::CheckCollisionPointTriangle(point, World(a_), World(b_), World(c_));
+    }
+
+  protected:
+    void Draw(PrimitiveRenderer& renderer) const override {
+        renderer.Paint(color_).Fill(filled_).Triangle(World(a_), World(b_), World(c_));
     }
 
   private:
@@ -210,6 +301,7 @@ class Triangle : public Shape<Triangle> {
     Vector2 c_{};
 };
 
+// wierzchołki względem pozycji obiektu
 class Polyline : public Shape<Polyline> {
   public:
     Polyline& Vertices(std::vector<Vector2> vertices) {
@@ -225,31 +317,38 @@ class Polyline : public Shape<Polyline> {
         return *this;
     }
 
-    void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Incremental(incremental_).Polyline(vertices_, closed_);
-    }
     // zamknięta łamana: cały wielokąt, otwarta: tylko jej odcinki
     bool Contains(Vector2 point) const override {
-        const int count = static_cast<int>(vertices_.size());
-        if (closed_ && count >= 3) return ::CheckCollisionPointPoly(point, vertices_.data(), count);
+        const std::vector<Vector2> world = WorldVertices();
+        const int count = static_cast<int>(world.size());
+        if (closed_ && count >= 3) return ::CheckCollisionPointPoly(point, world.data(), count);
         for (int i = 0; i + 1 < count; ++i)
-            if (::CheckCollisionPointLine(point, vertices_[i], vertices_[i + 1],
-                                          Line::kHitDistance))
+            if (::CheckCollisionPointLine(point, world[i], world[i + 1], Line::kHitDistance))
                 return true;
         return false;
     }
 
+  protected:
+    void Draw(PrimitiveRenderer& renderer) const override {
+        renderer.Paint(color_).Incremental(incremental_).Polyline(WorldVertices(), closed_);
+    }
+
   private:
+    std::vector<Vector2> WorldVertices() const {
+        std::vector<Vector2> world;
+        world.reserve(vertices_.size());
+        for (const Vector2& vertex : vertices_)
+            world.push_back(World(vertex));
+        return world;
+    }
+
     std::vector<Vector2> vertices_;
     bool closed_ = false;
     bool incremental_ = false;
 };
 
 // Scena: własne obiekty i własna logika. Silnik aktualizuje i rysuje tylko aktywną scenę.
-//
-//   engine.CreateScene("gra")
-//       .OnUpdate([&](float dt) { ... })
-//       .Spawn<Circle>().Position({400, 300}).Radius(20);
+// Obiekty utworzone przez scene.Spawn<T>() to korzenie drzew - mogą mieć własne dzieci.
 class Scene {
   public:
     template <typename T> T& Spawn() {
@@ -273,19 +372,10 @@ class Scene {
             entities_[i]->Update(dt, input);
     }
 
-    // rysuje od najniższej warstwy; w tej samej warstwie - w kolejności dodania
+    // rysuje drzewa obiektów od najniższej warstwy; w tej samej - w kolejności dodania
     void Draw(PrimitiveRenderer& renderer) const {
-        std::vector<const Entity*> order;
-        order.reserve(entities_.size());
-        for (const auto& entity : entities_)
-            order.push_back(entity.get());
-        std::stable_sort(order.begin(), order.end(),
-                         [](const Entity* a, const Entity* b) { return a->Layer() < b->Layer(); });
-
-        for (const Entity* entity : order) {
-            renderer.Reset();
-            entity->Draw(renderer);
-        }
+        for (const Entity* entity : Entity::ByLayer(entities_))
+            entity->Render(renderer);
         if (draw_) draw_(renderer.Reset());
     }
 
