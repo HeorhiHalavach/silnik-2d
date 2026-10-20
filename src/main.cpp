@@ -11,7 +11,6 @@ int main() {
 
     if (!engine.Ready()) return 1;
 
-    // logika globalna: działa w każdej scenie
     return engine
         .OnUpdate([&](float) {
             if (engine.KeyPressed(KEY_ONE)) engine.SwitchScene("menu");
