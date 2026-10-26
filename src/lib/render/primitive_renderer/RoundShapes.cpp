@@ -11,6 +11,10 @@ int Round(float value) {
 
 } // namespace
 
+// ------------------------------------------------------------
+// Okręgi i elipsy
+// ------------------------------------------------------------
+
 PrimitiveRenderer& PrimitiveRenderer::Circle(Vector2 center, float radius) {
     if (symmetric_) {
         CircleSymmetric(center, radius);
