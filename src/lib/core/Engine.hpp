@@ -12,6 +12,7 @@
 #include "../render/PrimitiveRenderer.hpp"
 #include "Input.hpp"
 #include "Scene.hpp"
+#include "Shapes.hpp"
 
 // Silnik gry. Konfiguracja, scena i pętla gry przez method chaining:
 //
