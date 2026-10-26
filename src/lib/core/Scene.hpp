@@ -8,10 +8,10 @@
 #include <utility>
 #include <vector>
 
-#include "Bitmap.hpp"
-#include "Geometry.hpp"
+#include "../render/Bitmap.hpp"
+#include "../render/Geometry.hpp"
+#include "../render/PrimitiveRenderer.hpp"
 #include "Input.hpp"
-#include "PrimitiveRenderer.hpp"
 
 // Baza wszystkich obiektów sceny. Obiekty tworzą drzewo: każdy może mieć dzieci
 // (Spawn<T>()), a dzieci kolejne dzieci. Pozycja dziecka jest względna wobec rodzica,
@@ -364,7 +364,6 @@ class Circle : public Shape<Circle> {
     float radius_ = 10.0f;
     bool symmetric_ = false;
 };
-#include <cmath>
 
 // pozycja = środek, promień = {poziomy, pionowy}
 class Ellipse : public Shape<Ellipse> {

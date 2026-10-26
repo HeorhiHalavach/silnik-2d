@@ -1,6 +1,6 @@
 #include <string>
 
-#include "lib/Engine.hpp"
+#include "lib/core/Engine.hpp"
 
 // Sceny rejestrują się same - patrz SCENE(...) w src/scenes/*.cpp
 int main() {

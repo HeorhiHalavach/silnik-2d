@@ -1,7 +1,7 @@
 #include <cmath>
 #include <vector>
 
-#include "lib/Engine.hpp"
+#include "lib/core/Engine.hpp"
 
 SCENE("prymitywy") {
     // prostokąt sterowany strzałkami, L przenosi go nad / pod błękitny

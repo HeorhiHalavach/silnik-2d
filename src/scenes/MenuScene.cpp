@@ -1,6 +1,6 @@
 #include <cmath>
 
-#include "lib/Engine.hpp"
+#include "lib/core/Engine.hpp"
 
 SCENE("menu") {
     scene.Spawn<Rect>().Position({300, 200}).Size({400, 300}).Paint(DARKBLUE);

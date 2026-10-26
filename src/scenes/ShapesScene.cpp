@@ -1,7 +1,7 @@
 #include <array>
 #include <vector>
 
-#include "lib/Engine.hpp"
+#include "lib/core/Engine.hpp"
 
 // Lab 3: własne algorytmy okręgu i elipsy (porównanie z raylib), wielokąty i wypełnianie.
 // Kolor czerwony - własny algorytm, niebieski - raylib.
