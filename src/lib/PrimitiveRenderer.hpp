@@ -68,6 +68,13 @@ class PrimitiveRenderer {
     PrimitiveRenderer& Lines(std::span<const Vector2> vertices); // pary (0,1), (2,3), ...
     PrimitiveRenderer& Polyline(std::span<const Vector2> vertices, bool closed = false);
 
+    // Wypełnianie obszaru przez spójność (sąsiedztwo 4-punktowe, wersja iteracyjna ze stosem)
+    // bieżącym kolorem. Wymaga celu-bitmapy, bo z ekranu nie da się odczytać koloru piksela.
+    //   BoundaryFill - wypełnia aż do pikseli w kolorze krawędzi (wnętrze może być różnokolorowe)
+    //   FloodFill    - wypełnia spójny obszar w kolorze piksela startowego (ziarna)
+    PrimitiveRenderer& BoundaryFill(Vector2 seed, Color boundary);
+    PrimitiveRenderer& FloodFill(Vector2 seed);
+
     // wyświetla bitmapę na ekranie (lewy górny róg w position)
     PrimitiveRenderer& Blit(const Bitmap& bitmap, Vector2 position);
 
