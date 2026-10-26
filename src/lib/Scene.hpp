@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "Bitmap.hpp"
 #include "Input.hpp"
 #include "PrimitiveRenderer.hpp"
 
@@ -43,6 +44,12 @@ class Entity {
         return {origin.x + position_.x, origin.y + position_.y};
     }
 
+    // punkt na ekranie (np. kursor) -> punkt względem pozycji obiektu
+    Vector2 ToLocal(Vector2 point) const {
+        const Vector2 origin = WorldPosition();
+        return {point.x - origin.x, point.y - origin.y};
+    }
+
     Entity* Parent() const { return parent_; }
     bool Hovered() const { return hovered_; }
 
@@ -63,7 +70,7 @@ class Entity {
 
     // rysuje obiekt, a nad nim jego dzieci (wg warstw)
     void Render(PrimitiveRenderer& renderer) const {
-        renderer.Reset();
+        renderer.Reset().TargetScreen();
         Draw(renderer);
         for (const Entity* child : ByLayer(children_))
             child->Render(renderer);
@@ -347,6 +354,54 @@ class Polyline : public Shape<Polyline> {
     bool incremental_ = false;
 };
 
+// Płótno: bitmapa w RAM wyświetlana w pozycji obiektu (lewy górny róg). Można po niej rysować
+// i wypełniać obszary (BoundaryFill / FloodFill), bo w odróżnieniu od ekranu da się z niej
+// odczytać kolory pikseli. Współrzędne rysowania są względem lewego górnego rogu płótna.
+//
+//   scene.Spawn<Canvas>().Position({50, 50}).Size({300, 200}).Background(WHITE)
+//       .Content([](PrimitiveRenderer& r) { r.Paint(BLACK).Circle({150, 100}, 80); });
+class Canvas : public Shape<Canvas> {
+  public:
+    Canvas& Size(Vector2 size) {
+        bitmap_ = Bitmap{static_cast<int>(size.x), static_cast<int>(size.y), background_};
+        return *this;
+    }
+    Canvas& Background(Color color) {
+        background_ = color;
+        bitmap_.Clear(color);
+        return *this;
+    }
+    Canvas& Clear() {
+        bitmap_.Clear(background_);
+        return *this;
+    }
+    // rysowanie po płótnie - renderer ma już ustawiony cel na bitmapę płótna
+    Canvas& Content(const std::function<void(PrimitiveRenderer&)>& paint) {
+        PrimitiveRenderer renderer;
+        renderer.Target(bitmap_);
+        paint(renderer);
+        return *this;
+    }
+
+    Bitmap& Pixels() { return bitmap_; }
+
+    bool Contains(Vector2 point) const override {
+        const Vector2 corner = WorldPosition();
+        return ::CheckCollisionPointRec(point,
+                                        {corner.x, corner.y, static_cast<float>(bitmap_.Width()),
+                                         static_cast<float>(bitmap_.Height())});
+    }
+
+  protected:
+    void Draw(PrimitiveRenderer& renderer) const override {
+        if (bitmap_.Width() > 0) renderer.Blit(bitmap_, WorldPosition());
+    }
+
+  private:
+    Bitmap bitmap_;
+    Color background_ = WHITE;
+};
+
 // Scena: własne obiekty i własna logika. Silnik aktualizuje i rysuje tylko aktywną scenę.
 // Obiekty utworzone przez scene.Spawn<T>() to korzenie drzew - mogą mieć własne dzieci.
 class Scene {
@@ -376,7 +431,7 @@ class Scene {
     void Draw(PrimitiveRenderer& renderer) const {
         for (const Entity* entity : Entity::ByLayer(entities_))
             entity->Render(renderer);
-        if (draw_) draw_(renderer.Reset());
+        if (draw_) draw_(renderer.Reset().TargetScreen());
     }
 
   private:

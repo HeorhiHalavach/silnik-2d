@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 
+#include "Bitmap.hpp"
 #include "Input.hpp"
 #include "PrimitiveRenderer.hpp"
 #include "Scene.hpp"
@@ -115,6 +116,10 @@ class Engine {
         return *this;
     }
     Engine& Clear(RenderTexture2D& target, Color color);
+    Engine& Clear(Bitmap& bitmap, Color color) {
+        bitmap.Clear(color);
+        return *this;
+    }
 
     // rysowanie prymitywów
     PrimitiveRenderer& Primitives() { return primitives_; }

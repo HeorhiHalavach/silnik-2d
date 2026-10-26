@@ -71,7 +71,7 @@ int Engine::Run() {
         ::BeginDrawing();
         ::ClearBackground(background_);
         if (scene) scene->Draw(primitives_);
-        if (draw_) draw_(primitives_.Reset());
+        if (draw_) draw_(primitives_.Reset().TargetScreen());
         ::EndDrawing();
 
         if (!pending_.empty()) {
@@ -88,6 +88,10 @@ int Engine::Run() {
 void Engine::Shutdown() {
     if (!initialized_) return;
     Log("Zamykanie silnika");
+    // sceny przed oknem: obiekty z bitmapami zwalniają tekstury, co wymaga kontekstu OpenGL
+    scenes_.clear();
+    active_.clear();
+    pending_.clear();
     ::CloseWindow();
     initialized_ = false;
 }
