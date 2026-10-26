@@ -6,9 +6,8 @@
 
 #include "Bitmap.hpp"
 
-// Rysowanie prymitywów 2D. Działa jak pędzel: ma bieżący kolor, wypełnienie
-// i cel rysowania (ekran albo bitmapa). Każda metoda zwraca *this, więc wywołania
-// można łączyć:
+// Rysowanie prymitywów 2D. Działa jak pędzel: ma bieżący kolor, wypełnienie, algorytmy
+// i cel rysowania (ekran albo bitmapa). Każda metoda zwraca *this, więc wywołania można łączyć:
 //
 //   renderer.Paint(RED).Fill().Circle({100, 100}, 40).Fill(false).Rect({200, 60}, {120, 80});
 //
@@ -30,7 +29,12 @@ class PrimitiveRenderer {
         incremental_ = value;
         return *this;
     }
-    PrimitiveRenderer& Reset();
+    // okręgi i elipsy: własny algorytm z symetrią (8-krotną / 4-krotną) zamiast raylib
+    PrimitiveRenderer& Symmetric(bool value = true) {
+        symmetric_ = value;
+        return *this;
+    }
+    PrimitiveRenderer& Reset(); // czarny, bez wypełnienia, algorytmy raylib
 
     // cel rysowania: ekran (domyślnie) albo bitmapa w RAM
     PrimitiveRenderer& Target(Bitmap& bitmap) {
@@ -47,6 +51,7 @@ class PrimitiveRenderer {
     PrimitiveRenderer& Line(Vector2 from, Vector2 to);
     PrimitiveRenderer& Rect(Vector2 position, Vector2 size);
     PrimitiveRenderer& Circle(Vector2 center, float radius);
+    PrimitiveRenderer& Ellipse(Vector2 center, Vector2 radius); // radius = {poziomy, pionowy}
     PrimitiveRenderer& Triangle(Vector2 a, Vector2 b, Vector2 c);
 
     // wersje tablicowe (wiele prymitywów w jednej pętli)
@@ -62,9 +67,12 @@ class PrimitiveRenderer {
     void Span(int y, int fromX, int toX); // poziomy odcinek pikseli (do wypełnień)
 
     void LineIncremental(Vector2 from, Vector2 to); // algorytm przyrostowy
+    void CircleSymmetric(Vector2 center, float radius);
+    void EllipseSymmetric(Vector2 center, Vector2 radius);
 
     Color color_ = BLACK;
     bool filled_ = false;
     bool incremental_ = false;
+    bool symmetric_ = false;
     Bitmap* target_ = nullptr; // nullptr = ekran
 };

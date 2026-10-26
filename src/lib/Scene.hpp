@@ -269,6 +269,11 @@ class Circle : public Shape<Circle> {
         radius_ = radius;
         return *this;
     }
+    // własny algorytm z 8-krotną symetrią zamiast raylib
+    Circle& Symmetric(bool value = true) {
+        symmetric_ = value;
+        return *this;
+    }
 
     bool Contains(Vector2 point) const override {
         return ::CheckCollisionPointCircle(point, WorldPosition(), radius_);
@@ -276,11 +281,46 @@ class Circle : public Shape<Circle> {
 
   protected:
     void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Fill(filled_).Circle(WorldPosition(), radius_);
+        renderer.Paint(color_).Fill(filled_).Symmetric(symmetric_).Circle(WorldPosition(), radius_);
     }
 
   private:
     float radius_ = 10.0f;
+    bool symmetric_ = false;
+};
+#include <cmath>
+
+// pozycja = środek, promień = {poziomy, pionowy}
+class Ellipse : public Shape<Ellipse> {
+  public:
+    Ellipse& Radius(Vector2 radius) {
+        radius_ = radius;
+        return *this;
+    }
+    // własny algorytm z 4-krotną symetrią zamiast raylib
+    Ellipse& Symmetric(bool value = true) {
+        symmetric_ = value;
+        return *this;
+    }
+
+    bool Contains(Vector2 point) const override {
+        const Vector2 local = ToLocal(point);
+        const float x = local.x / radius_.x;
+        const float y = local.y / radius_.y;
+        return x * x + y * y <= 1.0f;
+    }
+
+  protected:
+    void Draw(PrimitiveRenderer& renderer) const override {
+        renderer.Paint(color_)
+            .Fill(filled_)
+            .Symmetric(symmetric_)
+            .Ellipse(WorldPosition(), radius_);
+    }
+
+  private:
+    Vector2 radius_{20, 10};
+    bool symmetric_ = false;
 };
 
 // wierzchołki względem pozycji obiektu
