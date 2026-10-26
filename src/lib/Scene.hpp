@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Bitmap.hpp"
+#include "Geometry.hpp"
 #include "Input.hpp"
 #include "PrimitiveRenderer.hpp"
 
@@ -95,6 +96,14 @@ class Entity {
     Vector2 World(Vector2 local) const {
         const Vector2 origin = WorldPosition();
         return {origin.x + local.x, origin.y + local.y};
+    }
+    template <typename Vertex>
+    std::vector<Vertex> WorldVertices(const std::vector<Vertex>& local) const {
+        std::vector<Vertex> world;
+        world.reserve(local.size());
+        for (const Vertex& vertex : local)
+            world.push_back(Vertex{World(vertex)});
+        return world;
     }
 
     Vector2 position_{};
@@ -240,6 +249,73 @@ class Line : public Shape<Line> {
     bool incremental_ = false;
 };
 
+// Punkt w pozycji obiektu
+class Point : public Shape<Point> {
+  public:
+    bool Contains(Vector2 point) const override {
+        return ::CheckCollisionPointCircle(point, WorldPosition(), Line::kHitDistance);
+    }
+
+  protected:
+    void Draw(PrimitiveRenderer& renderer) const override {
+        renderer.Paint(color_).Point(WorldPosition());
+    }
+};
+
+// Wiele punktów naraz (wersja tablicowa), położenia względem pozycji obiektu
+class Points : public Shape<Points> {
+  public:
+    Points& Positions(std::vector<Vector2> positions) {
+        positions_ = std::move(positions);
+        return *this;
+    }
+
+    bool Contains(Vector2 point) const override {
+        for (const Vector2& position : positions_)
+            if (::CheckCollisionPointCircle(point, World(position), Line::kHitDistance))
+                return true;
+        return false;
+    }
+
+  protected:
+    void Draw(PrimitiveRenderer& renderer) const override {
+        renderer.Paint(color_).Points(WorldVertices(positions_));
+    }
+
+  private:
+    std::vector<Vector2> positions_;
+};
+
+// Wiele niezależnych odcinków (wersja tablicowa): pary wierzchołków (0,1), (2,3), ...
+class Lines : public Shape<Lines> {
+  public:
+    Lines& Vertices(std::vector<Vector2> vertices) {
+        vertices_ = std::move(vertices);
+        return *this;
+    }
+    Lines& Incremental(bool value = true) {
+        incremental_ = value;
+        return *this;
+    }
+
+    bool Contains(Vector2 point) const override {
+        for (std::size_t i = 0; i + 1 < vertices_.size(); i += 2)
+            if (::CheckCollisionPointLine(point, World(vertices_[i]), World(vertices_[i + 1]),
+                                          Line::kHitDistance))
+                return true;
+        return false;
+    }
+
+  protected:
+    void Draw(PrimitiveRenderer& renderer) const override {
+        renderer.Paint(color_).Incremental(incremental_).Lines(WorldVertices(vertices_));
+    }
+
+  private:
+    std::vector<Vector2> vertices_;
+    bool incremental_ = false;
+};
+
 // pozycja = lewy górny róg
 class Rect : public Shape<Rect> {
   public:
@@ -366,7 +442,7 @@ class Polyline : public Shape<Polyline> {
 
     // zamknięta łamana: cały wielokąt, otwarta: tylko jej odcinki
     bool Contains(Vector2 point) const override {
-        const std::vector<Vector2> world = WorldVertices();
+        const std::vector<Vector2> world = WorldVertices(vertices_);
         const int count = static_cast<int>(world.size());
         if (closed_ && count >= 3) return ::CheckCollisionPointPoly(point, world.data(), count);
         for (int i = 0; i + 1 < count; ++i)
@@ -377,20 +453,56 @@ class Polyline : public Shape<Polyline> {
 
   protected:
     void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Incremental(incremental_).Polyline(WorldVertices(), closed_);
+        renderer.Paint(color_)
+            .Incremental(incremental_)
+            .Polyline(WorldVertices(vertices_), closed_);
     }
 
   private:
-    std::vector<Vector2> WorldVertices() const {
-        std::vector<Vector2> world;
-        world.reserve(vertices_.size());
-        for (const Vector2& vertex : vertices_)
-            world.push_back(World(vertex));
-        return world;
-    }
-
     std::vector<Vector2> vertices_;
     bool closed_ = false;
+    bool incremental_ = false;
+};
+
+// Wielokąt (łamana zwyczajna zamknięta), wierzchołki względem pozycji obiektu.
+// Łamana wiązana (przecinające się krawędzie) nie jest rysowana - patrz Simple().
+// Fill() wypełnia go algorytmem scanline z kontrolą parzystości.
+class Polygon : public Shape<Polygon> {
+  public:
+    Polygon& Vertices(std::vector<Point2D> vertices) {
+        vertices_ = std::move(vertices);
+        return *this;
+    }
+    // zbiór odcinków tworzących zamknięty łańcuch; inny zbiór daje pusty wielokąt
+    Polygon& Edges(const std::vector<LineSegment>& edges) {
+        vertices_ = PolygonVertices(edges).value_or(std::vector<Point2D>{});
+        return *this;
+    }
+    Polygon& Incremental(bool value = true) {
+        incremental_ = value;
+        return *this;
+    }
+
+    bool Simple() const { return IsSimplePolygon(vertices_); }
+
+    bool Contains(Vector2 point) const override {
+        if (!Simple()) return false;
+        std::vector<Vector2> world;
+        for (const Point2D& vertex : WorldVertices(vertices_))
+            world.push_back(vertex);
+        return ::CheckCollisionPointPoly(point, world.data(), static_cast<int>(world.size()));
+    }
+
+  protected:
+    void Draw(PrimitiveRenderer& renderer) const override {
+        renderer.Paint(color_)
+            .Fill(filled_)
+            .Incremental(incremental_)
+            .Polygon(WorldVertices(vertices_));
+    }
+
+  private:
+    std::vector<Point2D> vertices_;
     bool incremental_ = false;
 };
 

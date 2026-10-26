@@ -5,6 +5,7 @@
 #include <span>
 
 #include "Bitmap.hpp"
+#include "Geometry.hpp"
 
 // Rysowanie prymitywów 2D. Działa jak pędzel: ma bieżący kolor, wypełnienie, algorytmy
 // i cel rysowania (ekran albo bitmapa). Każda metoda zwraca *this, więc wywołania można łączyć:
@@ -25,6 +26,7 @@ class PrimitiveRenderer {
         filled_ = value;
         return *this;
     }
+    // odcinki (Line, Lines, Polyline, Polygon): własny algorytm przyrostowy zamiast raylib
     PrimitiveRenderer& Incremental(bool value = true) {
         incremental_ = value;
         return *this;
@@ -54,6 +56,13 @@ class PrimitiveRenderer {
     PrimitiveRenderer& Ellipse(Vector2 center, Vector2 radius); // radius = {poziomy, pionowy}
     PrimitiveRenderer& Triangle(Vector2 a, Vector2 b, Vector2 c);
 
+    // Wielokąt (łamana zwyczajna zamknięta). Gdy krawędzie się przecinają (łamana wiązana)
+    // albo odcinki nie tworzą zamkniętego łańcucha, nic nie jest rysowane - można to
+    // sprawdzić wcześniej przez IsSimplePolygon(). Wypełnienie: algorytm scanline z kontrolą
+    // parzystości.
+    PrimitiveRenderer& Polygon(std::span<const Point2D> vertices);
+    PrimitiveRenderer& Polygon(std::span<const LineSegment> edges);
+
     // wersje tablicowe (wiele prymitywów w jednej pętli)
     PrimitiveRenderer& Points(std::span<const Vector2> positions);
     PrimitiveRenderer& Lines(std::span<const Vector2> vertices); // pary (0,1), (2,3), ...
@@ -69,6 +78,7 @@ class PrimitiveRenderer {
     void LineIncremental(Vector2 from, Vector2 to); // algorytm przyrostowy
     void CircleSymmetric(Vector2 center, float radius);
     void EllipseSymmetric(Vector2 center, Vector2 radius);
+    void ScanlineFill(std::span<const Point2D> vertices);
 
     Color color_ = BLACK;
     bool filled_ = false;

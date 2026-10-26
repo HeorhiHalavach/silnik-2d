@@ -1,4 +1,5 @@
 #include <cmath>
+#include <vector>
 
 #include "lib/Engine.hpp"
 
@@ -79,6 +80,32 @@ SCENE("prymitywy") {
             incremental = !incremental;
             self.Incremental(incremental).Paint(incremental ? RED : BLUE);
         });
+
+    // wersje tablicowe: chmura punktów i "gwiazda" z niezależnych odcinków
+    scene.Spawn<Points>()
+        .Position({830, 80})
+        .Positions([] {
+            std::vector<Vector2> positions;
+            for (int i = 0; i < 300; ++i)
+                positions.push_back({static_cast<float>(::GetRandomValue(0, 150)),
+                                     static_cast<float>(::GetRandomValue(0, 120))});
+            return positions;
+        }())
+        .Paint(MAROON);
+
+    scene.Spawn<Lines>()
+        .Position({900, 270})
+        .Vertices([] {
+            std::vector<Vector2> vertices;
+            for (int i = 0; i < 16; ++i) {
+                const float angle = static_cast<float>(i) * 2.0f * PI / 16.0f;
+                vertices.push_back({0, 0});
+                vertices.push_back({45 * std::cos(angle), 45 * std::sin(angle)});
+            }
+            return vertices;
+        }())
+        .Incremental()
+        .Paint(DARKPURPLE);
 
     // układ słoneczny: planeta krąży wokół słońca, księżyc (dziecko planety) wokół planety
     scene.Spawn<Group>().Position({880, 420}).Children([](Group& system) {
