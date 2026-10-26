@@ -9,6 +9,15 @@ int Round(float value) {
     return static_cast<int>(std::lround(value));
 }
 
+// wspólna implementacja łamanej dla wierzchołków Vector2 i Point2D
+template <typename Vertex>
+void DrawPolyline(PrimitiveRenderer& renderer, std::span<const Vertex> vertices, bool closed) {
+    if (vertices.size() < 2) return;
+    for (std::size_t i = 0; i + 1 < vertices.size(); ++i)
+        renderer.Line(vertices[i], vertices[i + 1]);
+    if (closed) renderer.Line(vertices.back(), vertices.front());
+}
+
 } // namespace
 
 PrimitiveRenderer& PrimitiveRenderer::Reset() {
@@ -138,9 +147,17 @@ PrimitiveRenderer& PrimitiveRenderer::Lines(std::span<const Vector2> vertices) {
 }
 
 PrimitiveRenderer& PrimitiveRenderer::Polyline(std::span<const Vector2> vertices, bool closed) {
-    if (vertices.size() < 2) return *this;
-    for (std::size_t i = 0; i + 1 < vertices.size(); ++i)
-        Line(vertices[i], vertices[i + 1]);
-    if (closed) Line(vertices.back(), vertices.front());
+    DrawPolyline(*this, vertices, closed);
+    return *this;
+}
+
+PrimitiveRenderer& PrimitiveRenderer::Polyline(std::span<const Point2D> vertices, bool closed) {
+    DrawPolyline(*this, vertices, closed);
+    return *this;
+}
+
+PrimitiveRenderer& PrimitiveRenderer::Polyline(std::span<const LineSegment> segments) {
+    for (const LineSegment& segment : segments)
+        Line(segment.From(), segment.To());
     return *this;
 }

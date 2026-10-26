@@ -27,6 +27,17 @@ Engine& Engine::Fullscreen(bool value) {
     return *this;
 }
 
+Engine& Engine::VSync(bool value) {
+    vsync_ = value;
+    if (initialized_) {
+        if (value)
+            ::SetWindowState(FLAG_VSYNC_HINT);
+        else
+            ::ClearWindowState(FLAG_VSYNC_HINT);
+    }
+    return *this;
+}
+
 Engine& Engine::Fps(int fps) {
     fps_ = fps;
     if (initialized_) ::SetTargetFPS(fps_);
@@ -39,12 +50,16 @@ Engine& Engine::Init() {
     if (initialized_) return *this;
     if (!logFile_.empty()) log_.open(logFile_);
 
-    if (fullscreen_) {
-        ::SetConfigFlags(FLAG_FULLSCREEN_MODE);
+    // flagi okna muszą być ustawione przed InitWindow
+    unsigned int flags = 0;
+    if (fullscreen_) flags |= FLAG_FULLSCREEN_MODE;
+    if (vsync_) flags |= FLAG_VSYNC_HINT;
+    ::SetConfigFlags(flags);
+
+    if (fullscreen_)
         ::InitWindow(0, 0, title_.c_str());
-    } else {
+    else
         ::InitWindow(width_, height_, title_.c_str());
-    }
 
     if (!::IsWindowReady()) {
         Log("BLAD: nie udalo sie utworzyc okna");
@@ -53,7 +68,8 @@ Engine& Engine::Init() {
 
     ::SetTargetFPS(fps_);
     initialized_ = true;
-    Log("Silnik zainicjalizowany");
+    Log("Silnik zainicjalizowany (podwojne buforowanie, V-Sync: " +
+        std::string(vsync_ ? "tak" : "nie") + ")");
     return *this;
 }
 

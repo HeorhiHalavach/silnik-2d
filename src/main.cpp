@@ -6,6 +6,7 @@
 int main() {
     Engine& engine = Engine::Get()
                          .Title("Silnik 2D - lab 3")
+                         .VSync(false)           // podwójne buforowanie z synchronizacją pionową
                          .Window(1000, 700) // albo .Fullscreen()
                          .Background(RAYWHITE)
                          .StartScene("menu")

@@ -66,7 +66,12 @@ class PrimitiveRenderer {
     // wersje tablicowe (wiele prymitywów w jednej pętli)
     PrimitiveRenderer& Points(std::span<const Vector2> positions);
     PrimitiveRenderer& Lines(std::span<const Vector2> vertices); // pary (0,1), (2,3), ...
+    // Łamana otwarta lub zamknięta (closed = true łączy ostatni wierzchołek z pierwszym).
+    // W odróżnieniu od Polygon() nie sprawdza przecięć - łamana może być wiązana.
     PrimitiveRenderer& Polyline(std::span<const Vector2> vertices, bool closed = false);
+    PrimitiveRenderer& Polyline(std::span<const Point2D> vertices, bool closed = false);
+    // łamana ze zbioru odcinków - otwarta lub zamknięta zależnie od samych odcinków
+    PrimitiveRenderer& Polyline(std::span<const LineSegment> segments);
 
     // Wypełnianie obszaru przez spójność (sąsiedztwo 4-punktowe, wersja iteracyjna ze stosem)
     // bieżącym kolorem. Wymaga celu-bitmapy, bo z ekranu nie da się odczytać koloru piksela.

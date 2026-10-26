@@ -50,6 +50,10 @@ class Engine {
     Engine& Window(int width, int height);
     Engine& Fullscreen(bool value = true);
     Engine& Fps(int fps);
+    // Wielokrotne buforowanie: raylib (przez GLFW) zawsze tworzy okno z podwójnym buforem
+    // ramki - rysujemy w tylnym buforze, a EndDrawing() zamienia go z przednim. VSync()
+    // synchronizuje tę zamianę z odświeżaniem monitora, co usuwa rozrywanie obrazu (tearing).
+    Engine& VSync(bool value = true);
     Engine& Background(Color color) {
         background_ = color;
         return *this;
@@ -136,6 +140,7 @@ class Engine {
     int width_ = 800;
     int height_ = 600;
     bool fullscreen_ = false;
+    bool vsync_ = false;
     int fps_ = 60;
     Color background_ = BLACK;
     Input input_;

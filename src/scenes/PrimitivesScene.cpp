@@ -128,7 +128,39 @@ SCENE("prymitywy") {
             });
     });
 
-    scene.OnDraw([](PrimitiveRenderer&) {
+    // ---------------- Point2D, LineSegment i łamane z nich (lab 2, zad. 4-6) ----------------
+    // łamana otwarta i zamknięta ze zbioru punktów Point2D
+    const std::vector<Point2D> zigzag{{340, 240}, {370, 270}, {400, 240}, {430, 270}, {460, 240}};
+    const std::vector<Point2D> diamond{{400, 285}, {430, 305}, {400, 325}, {370, 305}};
+    // łamana zamknięta ze zbioru odcinków - może się przecinać (Polygon() by jej nie narysował)
+    const std::vector<LineSegment> bowTie{{{340, 340}, {460, 380}},
+                                          {{460, 380}, {460, 340}},
+                                          {{460, 340}, {340, 380}},
+                                          {{340, 380}, {340, 340}}};
+    // odcinki rysowane metodą LineSegment::Draw - te same nachylenia dwoma algorytmami
+    const std::vector<LineSegment> library{{{830, 510}, {980, 545}}, {{830, 525}, {865, 600}}};
+    const std::vector<LineSegment> incremental{{{845, 510}, {995, 545}}, {{845, 525}, {880, 600}}};
+
+    scene.OnDraw([=](PrimitiveRenderer& renderer) {
+        renderer.Paint(DARKGREEN).Incremental().Polyline(zigzag);
+        renderer.Paint(DARKGREEN).Incremental(false).Polyline(diamond, true);
+        renderer.Paint(MAROON).Incremental().Polyline(bowTie);
+
+        renderer.Paint(BLUE);
+        for (const LineSegment& segment : library)
+            segment.Draw(renderer); // algorytm domyślny (raylib)
+        renderer.Paint(RED);
+        for (const LineSegment& segment : incremental)
+            segment.Draw(renderer, true); // algorytm przyrostowy
+
+        renderer.Paint(BLACK);
+        for (const LineSegment& segment : library) {
+            segment.From().Draw(renderer); // końce odcinków jako Point2D
+            segment.To().Draw(renderer);
+        }
+
+        ::DrawText("lamane: Point2D / LineSegment", 335, 388, 10, GRAY);
+        ::DrawText("Draw(): raylib / przyrostowy", 830, 608, 10, GRAY);
         ::DrawText("strzalki - prostokat, L - warstwa, PPM - odcinek, "
                    "SPACJA - algorytm, LPM - klik",
                    20, 630, 18, GRAY);

@@ -44,7 +44,8 @@ class Point2D {
 // Odcinek między dwoma punktami.
 //
 //   LineSegment edge{{0, 0}, {100, 50}};
-//   edge.Draw(renderer.Incremental());   // algorytm wybiera renderer
+//   edge.Draw(renderer);         // algorytm domyślny (raylib)
+//   edge.Draw(renderer, true);   // algorytm przyrostowy
 class LineSegment {
   public:
     constexpr LineSegment() = default;
@@ -64,8 +65,9 @@ class LineSegment {
     // czy odcinki mają choć jeden punkt wspólny (także styk końcami i nakładanie się)
     bool Intersects(const LineSegment& other) const;
 
-    // rysuje odcinek bieżącym kolorem i algorytmem renderera
-    const LineSegment& Draw(PrimitiveRenderer& renderer) const;
+    // rysuje odcinek bieżącym kolorem renderera wybranym algorytmem:
+    // domyślnym z biblioteki (false) albo przyrostowym (true)
+    const LineSegment& Draw(PrimitiveRenderer& renderer, bool incremental = false) const;
 
   private:
     Point2D from_;
