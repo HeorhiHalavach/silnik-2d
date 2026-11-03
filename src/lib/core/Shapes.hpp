@@ -22,5 +22,6 @@
 #include "shapes/Points.hpp"
 #include "shapes/Polygon.hpp"
 #include "shapes/Polyline.hpp"
+#include "shapes/Player.hpp"
 #include "shapes/Rect.hpp"
 #include "shapes/Triangle.hpp"

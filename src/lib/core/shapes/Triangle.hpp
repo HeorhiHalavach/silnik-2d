@@ -33,7 +33,7 @@ class Triangle : public Shape<Triangle> {
   protected:
     /** @copydoc Entity::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Fill(filled_).Triangle(World(a_), World(b_), World(c_));
+        renderer.Paint(color_).Fill(filled_).Triangle(a_, b_, c_);
     }
 
   private:

@@ -10,6 +10,8 @@
 #include <span>
 #include <vector>
 
+#include "../core/ObjectInterfaces.hpp"
+
 class PrimitiveRenderer;
 
 /**
@@ -18,32 +20,32 @@ class PrimitiveRenderer;
  * gdzie silnik przyjmuje Vector2.
  * @code{.cpp}
  * Point2D p{100, 50};
- * p.X(120).Y(80).Draw(renderer);
+ * p.X(120).Y(80).Render(renderer);
  * @endcode
  */
-class Point2D {
+class Point2D : public ShapeObject {
   public:
     /** @brief Tworzy punkt w początku układu. */
-    constexpr Point2D() = default;
+    Point2D() = default;
 
     /**
      * @brief Tworzy punkt z dwóch współrzędnych.
      * @param x Współrzędna pozioma.
      * @param y Współrzędna pionowa.
      */
-    constexpr Point2D(float x, float y) : x_(x), y_(y) {}
+    Point2D(float x, float y) : x_(x), y_(y) {}
 
     /**
      * @brief Tworzy punkt z wektora raylib.
      * @param vector Współrzędne wektora.
      */
-    constexpr Point2D(Vector2 vector) : x_(vector.x), y_(vector.y) {}
+    Point2D(Vector2 vector) : x_(vector.x), y_(vector.y) {}
 
     /**
      * @brief Konwertuje punkt na wektor raylib.
      * @return Wektor o tych samych współrzędnych.
      */
-    constexpr operator Vector2() const { return {x_, y_}; }
+    operator Vector2() const { return {x_, y_}; }
 
     /**
      * @brief Pobiera współrzędną poziomą.
@@ -80,12 +82,17 @@ class Point2D {
     /**
      * @brief Rysuje punkt bieżącym kolorem renderera.
      * @param renderer Renderer docelowy.
-     * @return Ten sam punkt.
      */
-    const Point2D& Draw(PrimitiveRenderer& renderer) const;
+    void Render(PrimitiveRenderer& renderer) const override;
+
+    void Translate(Vector2 offset) override;
+    void Rotate(float radians, Vector2 pivot) override;
+    void Scale(Vector2 factors, Vector2 pivot) override;
 
     /** @brief Porównuje obie współrzędne punktów. */
-    bool operator==(const Point2D&) const = default;
+    bool operator==(const Point2D& other) const {
+        return x_ == other.x_ && y_ == other.y_;
+    }
 
   private:
     float x_ = 0.0f; /**< Współrzędna pozioma. */
@@ -96,21 +103,23 @@ class Point2D {
  * @brief Odcinek wyznaczony przez dwa punkty Point2D.
  * @code{.cpp}
  * LineSegment edge{{0, 0}, {100, 50}};
- * edge.Draw(renderer);       // algorytm domyślny (raylib)
- * edge.Draw(renderer, true); // algorytm przyrostowy
+ * renderer.Incremental(false);
+ * edge.Render(renderer);     // algorytm domyślny (raylib)
+ * renderer.Incremental(true);
+ * edge.Render(renderer);     // algorytm przyrostowy
  * @endcode
  */
-class LineSegment {
+class LineSegment : public ShapeObject {
   public:
     /** @brief Tworzy odcinek zerowy w początku układu. */
-    constexpr LineSegment() = default;
+    LineSegment() = default;
 
     /**
      * @brief Tworzy odcinek między dwoma punktami.
      * @param from Początek.
      * @param to Koniec.
      */
-    constexpr LineSegment(Point2D from, Point2D to) : from_(from), to_(to) {}
+    LineSegment(Point2D from, Point2D to) : from_(from), to_(to) {}
 
     /**
      * @brief Pobiera początek odcinka.
@@ -153,14 +162,14 @@ class LineSegment {
     bool Intersects(const LineSegment& other) const;
 
     /**
-     * @brief Rysuje odcinek bieżącym kolorem renderera wybranym algorytmem.
+     * @brief Rysuje odcinek bieżącym kolorem i algorytmem renderera.
      * @param renderer Renderer docelowy.
-     * @param incremental true dla algorytmu przyrostowego, false dla domyślnego z raylib.
-     * @return Ten sam odcinek.
-     * @note Ustawia na rendererze flagę Incremental(incremental), która - jak cały stan
-     * pędzla - obowiązuje także dla kolejnych wywołań, aż do jej zmiany lub Reset().
      */
-    const LineSegment& Draw(PrimitiveRenderer& renderer, bool incremental = false) const;
+    void Render(PrimitiveRenderer& renderer) const override;
+
+    void Translate(Vector2 offset) override;
+    void Rotate(float radians, Vector2 pivot) override;
+    void Scale(Vector2 factors, Vector2 pivot) override;
 
   private:
     Point2D from_; /**< Początek odcinka. */

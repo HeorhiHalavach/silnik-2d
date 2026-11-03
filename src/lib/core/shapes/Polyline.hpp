@@ -64,9 +64,7 @@ class Polyline : public Shape<Polyline> {
   protected:
     /** @copydoc Entity::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_)
-            .Incremental(incremental_)
-            .Polyline(WorldVertices(vertices_), closed_);
+        renderer.Paint(color_).Incremental(incremental_).Polyline(vertices_, closed_);
     }
 
   private:

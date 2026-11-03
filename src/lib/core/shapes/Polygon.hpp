@@ -67,10 +67,7 @@ class Polygon : public Shape<Polygon> {
   protected:
     /** @copydoc Entity::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_)
-            .Fill(filled_)
-            .Incremental(incremental_)
-            .Polygon(WorldVertices(vertices_));
+        renderer.Paint(color_).Fill(filled_).Incremental(incremental_).Polygon(vertices_);
     }
 
   private:

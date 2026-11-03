@@ -33,9 +33,10 @@ class Ellipse : public Shape<Ellipse> {
 
     /** @copydoc Entity::Contains */
     bool Contains(Vector2 point) const override {
-        const Vector2 local = ToLocal(point);
-        const float x = local.x / radius_.x;
-        const float y = local.y / radius_.y;
+        const auto local = TryToLocal(point);
+        if (!local || radius_.x == 0.0f || radius_.y == 0.0f) return false;
+        const float x = local->x / radius_.x;
+        const float y = local->y / radius_.y;
         return x * x + y * y <= 1.0f;
     }
 
@@ -45,7 +46,7 @@ class Ellipse : public Shape<Ellipse> {
         renderer.Paint(color_)
             .Fill(filled_)
             .Symmetric(symmetric_)
-            .Ellipse(WorldPosition(), radius_);
+            .Ellipse({0.0f, 0.0f}, radius_);
     }
 
   private:

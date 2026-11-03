@@ -36,7 +36,7 @@ class Points : public Shape<Points> {
   protected:
     /** @copydoc Entity::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Points(WorldVertices(positions_));
+        renderer.Paint(color_).Points(positions_);
     }
 
   private:

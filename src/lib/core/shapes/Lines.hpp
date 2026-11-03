@@ -47,7 +47,7 @@ class Lines : public Shape<Lines> {
   protected:
     /** @copydoc Entity::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Incremental(incremental_).Lines(WorldVertices(vertices_));
+        renderer.Paint(color_).Incremental(incremental_).Lines(vertices_);
     }
 
   private:

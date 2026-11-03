@@ -23,14 +23,14 @@ class Rect : public Shape<Rect> {
 
     /** @copydoc Entity::Contains */
     bool Contains(Vector2 point) const override {
-        const Vector2 corner = WorldPosition();
-        return ::CheckCollisionPointRec(point, {corner.x, corner.y, size_.x, size_.y});
+        const auto local = TryToLocal(point);
+        return local && ::CheckCollisionPointRec(*local, {0.0f, 0.0f, size_.x, size_.y});
     }
 
   protected:
     /** @copydoc Entity::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Fill(filled_).Rect(WorldPosition(), size_);
+        renderer.Paint(color_).Fill(filled_).Rect({0.0f, 0.0f}, size_);
     }
 
   private:

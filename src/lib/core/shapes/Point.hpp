@@ -20,7 +20,7 @@ class Point : public Shape<Point> {
   protected:
     /** @copydoc Entity::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Point(WorldPosition());
+        renderer.Paint(color_).Point({0.0f, 0.0f});
     }
 };
 

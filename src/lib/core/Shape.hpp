@@ -37,8 +37,10 @@
  * | @ref shapes::Polygon  | wielokąt (wypełnianie scanline)       | `Vertices()`, `Edges()`               |
  * | @ref shapes::Canvas   | bitmapę w RAM (flood/boundary fill)   | `Size()`, `Background()`, `Content()` |
  * | @ref shapes::Group    | nic - grupuje i przesuwa dzieci       | -                                     |
+ * | @ref shapes::Player   | sterowany klawiaturą trójkąt          | `Speed()`                             |
  *
- * Metody wspólne (z tej klasy) ma każdy kształt: Position(), Move(), Paint(), Layer(),
+ * Metody wspólne (z tej klasy) ma każdy kształt: Position(), Move(), Translate(),
+ * Rotate(), Scale(), Paint(), Layer(),
  * Children() oraz zdarzenia OnUpdate(), OnClick(), OnMouseEnter(), OnMouseLeave()
  * i OnKeyPressed(). Fill() działa w Rect, Triangle, Circle, Ellipse i Polygon, a Incremental()
  * (własny algorytm odcinka) w Line, Lines, Polyline i Polygon.
@@ -75,7 +77,7 @@
  * @endcode
  */
 // clang-format on
-template <typename T> class Shape : public Entity {
+template <typename T> class Shape : public Entity, public ShapeObject {
   public:
     /** Getter Position() z Entity - inaczej przesłoniłby go setter o tej samej nazwie. */
     using Entity::Position;
@@ -86,18 +88,35 @@ template <typename T> class Shape : public Entity {
      * @return Ten sam kształt.
      */
     T& Position(Vector2 position) {
-        position_ = position;
+        transform_.tx = position.x;
+        transform_.ty = position.y;
         return Self();
     }
 
     /**
-     * @brief Przesuwa kształt o wektor w układzie lokalnym.
+     * @brief Przesuwa kształt o wektor w układzie rodzica.
      * @param offset Wektor przesunięcia.
      * @return Ten sam kształt.
      */
     T& Move(Vector2 offset) {
-        position_ = {position_.x + offset.x, position_.y + offset.y};
+        transform_.tx += offset.x;
+        transform_.ty += offset.y;
         return Self();
+    }
+
+    /** @brief Przesuwa obiekt w układzie jego rodzica. */
+    void Translate(Vector2 offset) override { Move(offset); }
+
+    /** @brief Obraca obiekt i jego dzieci wokół punktu w układzie rodzica. */
+    void Rotate(float radians, Vector2 pivot) override {
+        transform_ = Transform2D::Translation(pivot) * Transform2D::Rotation(radians) *
+                     Transform2D::Translation({-pivot.x, -pivot.y}) * transform_;
+    }
+
+    /** @brief Skaluje obiekt i jego dzieci wokół punktu w układzie rodzica. */
+    void Scale(Vector2 factors, Vector2 pivot) override {
+        transform_ = Transform2D::Translation(pivot) * Transform2D::Scaling(factors) *
+                     Transform2D::Translation({-pivot.x, -pivot.y}) * transform_;
     }
 
     /**

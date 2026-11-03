@@ -52,7 +52,7 @@ class Line : public Shape<Line> {
   protected:
     /** @copydoc Entity::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Incremental(incremental_).Line(World(from_), World(to_));
+        renderer.Paint(color_).Incremental(incremental_).Line(from_, to_);
     }
 
   private:

@@ -33,13 +33,14 @@ class Circle : public Shape<Circle> {
 
     /** @copydoc Entity::Contains */
     bool Contains(Vector2 point) const override {
-        return ::CheckCollisionPointCircle(point, WorldPosition(), radius_);
+        const auto local = TryToLocal(point);
+        return local && ::CheckCollisionPointCircle(*local, {0.0f, 0.0f}, radius_);
     }
 
   protected:
     /** @copydoc Entity::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
-        renderer.Paint(color_).Fill(filled_).Symmetric(symmetric_).Circle(WorldPosition(), radius_);
+        renderer.Paint(color_).Fill(filled_).Symmetric(symmetric_).Circle({0.0f, 0.0f}, radius_);
     }
 
   private:

@@ -5,15 +5,19 @@
 #pragma once
 
 #include <raylib.h>
+#include <rlgl.h>
 
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
 #include "../render/PrimitiveRenderer.hpp"
 #include "Input.hpp"
+#include "ObjectInterfaces.hpp"
+#include "Transform2D.hpp"
 
 /**
  * @brief Abstrakcyjna baza wszystkich obiektów sceny.
@@ -29,7 +33,8 @@
  *
  * Metody ustawiające zdarzenia z dostępem do konkretnego typu obiektu dodaje Shape<T>.
  */
-class Entity {
+class Entity : public virtual UpdatableObject,
+               public virtual DrawableObject {
   public:
     /** @brief Wirtualny destruktor umożliwiający usuwanie obiektów przez wskaźnik Entity. */
     virtual ~Entity() = default;
@@ -52,26 +57,27 @@ class Entity {
      * @brief Pobiera pozycję lokalną względem rodzica.
      * @return Pozycja lokalna.
      */
-    Vector2 Position() const { return position_; }
+    Vector2 Position() const { return {transform_.tx, transform_.ty}; }
 
     /**
      * @brief Oblicza pozycję obiektu w układzie ekranu (z uwzględnieniem rodziców).
      * @return Pozycja na ekranie.
      */
-    Vector2 WorldPosition() const {
-        if (!parent_) return position_;
-        const Vector2 origin = parent_->WorldPosition();
-        return {origin.x + position_.x, origin.y + position_.y};
-    }
+    Vector2 WorldPosition() const { return World({0.0f, 0.0f}); }
 
     /**
      * @brief Przelicza punkt ekranowy (np. kursor) na układ lokalny obiektu.
      * @param point Punkt w układzie ekranu.
-     * @return Punkt względem pozycji obiektu.
+     * @return Punkt w układzie lokalnym albo {0, 0}, gdy macierz jest nieodwracalna.
      */
-    Vector2 ToLocal(Vector2 point) const {
-        const Vector2 origin = WorldPosition();
-        return {point.x - origin.x, point.y - origin.y};
+    Vector2 ToLocal(Vector2 point) const { return TryToLocal(point).value_or(Vector2{}); }
+
+    /**
+     * @brief Przelicza punkt ekranowy na lokalny, jeśli przekształcenie jest odwracalne.
+     * @return Punkt lokalny albo brak wyniku, np. po skalowaniu przez zero.
+     */
+    std::optional<Vector2> TryToLocal(Vector2 point) const {
+        return WorldTransform().InverseApply(point);
     }
 
     /**
@@ -106,7 +112,7 @@ class Entity {
      * @param dt Czas od poprzedniej klatki w sekundach.
      * @param input Stan wejścia.
      */
-    void Update(float dt, const Input& input) {
+    void Update(float dt, const Input& input) override {
         HandleEvents(dt, input);
         // pętla po indeksie: zdarzenie może wywołać Spawn() i powiększyć wektor
         for (std::size_t i = 0; i < children_.size(); ++i)
@@ -118,11 +124,15 @@ class Entity {
      * @details Przed rysowaniem obiektu pędzel jest resetowany, a celem staje się ekran.
      * @param renderer Renderer prymitywów.
      */
-    void Render(PrimitiveRenderer& renderer) const {
+    void Render(PrimitiveRenderer& renderer) const override {
         renderer.Reset().TargetScreen();
+        const auto matrix = transform_.RlglMatrix();
+        rlPushMatrix();
+        rlMultMatrixf(matrix.data());
         Draw(renderer);
         for (const Entity* child : ByLayer(children_))
             child->Render(renderer);
+        rlPopMatrix();
     }
 
     /**
@@ -143,7 +153,8 @@ class Entity {
   protected:
     /**
      * @brief Rysuje sam kształt obiektu, bez dzieci.
-     * @details Współrzędne ekranowe należy wyznaczać przez World() lub WorldPosition().
+     * @details Wierzchołki należy podawać w układzie lokalnym. Render() nakłada
+     * przekształcenia obiektu i jego rodziców podczas rysowania.
      * @param renderer Renderer z wyczyszczonym pędzlem i celem ustawionym na ekran.
      */
     virtual void Draw(PrimitiveRenderer& renderer) const = 0;
@@ -154,8 +165,13 @@ class Entity {
      * @return Punkt w układzie ekranu.
      */
     Vector2 World(Vector2 local) const {
-        const Vector2 origin = WorldPosition();
-        return {origin.x + local.x, origin.y + local.y};
+        return WorldTransform().Apply(local);
+    }
+
+    /** @brief Łączy własne przekształcenie z przekształceniami rodziców. */
+    Transform2D WorldTransform() const {
+        if (!parent_) return transform_;
+        return parent_->WorldTransform() * transform_;
     }
 
     /**
@@ -173,7 +189,7 @@ class Entity {
         return world;
     }
 
-    Vector2 position_{};   /**< Pozycja względem rodzica. */
+    Transform2D transform_; /**< Pozycja i przekształcenie względem rodzica. */
     Color color_ = BLACK;  /**< Kolor rysowania. */
     bool filled_ = false;  /**< Czy figura jest wypełniona. */
     bool hovered_ = false; /**< Czy kursor był nad obiektem w ostatnim Update(). */
