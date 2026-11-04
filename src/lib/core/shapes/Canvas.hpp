@@ -7,7 +7,7 @@
 #include <functional>
 
 #include "../../render/Bitmap.hpp"
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 
 namespace shapes {
 
@@ -21,7 +21,7 @@ namespace shapes {
  *     .Content([](PrimitiveRenderer& r) { r.Paint(BLACK).Circle({150, 100}, 80); });
  * @endcode
  */
-class Canvas : public Shape<Canvas> {
+class Canvas : public Entity {
   public:
     /**
      * @brief Ustawia rozmiar, tworząc bitmapę od nowa.

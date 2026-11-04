@@ -4,12 +4,12 @@
  */
 #pragma once
 
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 
 namespace shapes {
 
 /** @brief Elipsa; pozycja obiektu oznacza środek, a promienie obie półosie. */
-class Ellipse : public Shape<Ellipse> {
+class Ellipse : public Entity {
   public:
     /**
      * @brief Ustawia promienie poziomy i pionowy.

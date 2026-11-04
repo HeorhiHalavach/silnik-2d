@@ -8,33 +8,41 @@
 /** @brief Tworzy trzy porównania transformacji i sterowany statek. */
 SCENE("transformacje") {
     // Warstwa 1 rysuje szare kontury stanu przed transformacją nad kolorowymi figurami.
+    scene.Spawn<shapes::Rect>().Position({170, 150}).Size({170, 90}).Paint(GRAY).Layer(1);
     scene.Spawn<shapes::Rect>()
-        .Position({170, 150}).Size({170, 90}).Paint(GRAY).Layer(1);
-    auto& rectangle = scene.Spawn<shapes::Rect>();
-    rectangle.Position({170, 150}).Size({170, 90}).Paint(DARKBLUE).Fill();
-    rectangle.Rotate(PI / 6.0f, {255, 195});
-    rectangle.OnClick([](shapes::Rect& self) { self.Paint(RED); });
+        .Position({170, 150})
+        .Size({170, 90})
+        .Paint(DARKBLUE)
+        .Fill()
+        .Rotate(PI / 6.0f, {255, 195})
+        .OnClick([](shapes::Rect& self) { self.Paint(RED); });
 
+    scene.Spawn<shapes::Circle>().Position({650, 200}).Radius(65).Paint(GRAY).Layer(1);
     scene.Spawn<shapes::Circle>()
-        .Position({650, 200}).Radius(65).Paint(GRAY).Layer(1);
-    auto& circle = scene.Spawn<shapes::Circle>();
-    circle.Position({650, 200}).Radius(65).Paint(SKYBLUE).Fill();
-    circle.Scale({1.5f, 0.6f}, {650, 200});
+        .Position({650, 200})
+        .Radius(65)
+        .Paint(SKYBLUE)
+        .Fill()
+        .Scale({1.5f, 0.6f}); // względem własnej pozycji (650, 200)
 
-    auto& originalGroup = scene.Spawn<shapes::Group>();
-    originalGroup.Position({200, 440}).Layer(1);
-    originalGroup.Spawn<shapes::Rect>().Position({-50, -30}).Size({100, 60}).Paint(GRAY);
-    originalGroup.Spawn<shapes::Circle>().Position({80, 0}).Radius(25).Paint(GRAY);
+    scene.Spawn<shapes::Group>().Position({200, 440}).Layer(1).Children([](shapes::Group& self) {
+        self.Spawn<shapes::Rect>().Position({-50, -30}).Size({100, 60}).Paint(GRAY);
+        self.Spawn<shapes::Circle>().Position({80, 0}).Radius(25).Paint(GRAY);
+    });
 
-    auto& group = scene.Spawn<shapes::Group>();
-    group.Position({200, 440});
-    group.Spawn<shapes::Rect>().Position({-50, -30}).Size({100, 60}).Paint(GOLD).Fill();
-    group.Spawn<shapes::Circle>().Position({80, 0}).Radius(25).Paint(ORANGE).Fill();
-    group.Rotate(PI / 5.0f, {200, 440});
+    scene.Spawn<shapes::Group>()
+        .Position({200, 440})
+        .Children([](shapes::Group& self) {
+            self.Spawn<shapes::Rect>().Position({-50, -30}).Size({100, 60}).Paint(GOLD).Fill();
+            self.Spawn<shapes::Circle>().Position({80, 0}).Radius(25).Paint(ORANGE).Fill();
+        })
+        .Rotate(PI / 5.0f); // wokół własnej pozycji (200, 440)
 
-    auto& player = scene.Spawn<shapes::Player>();
-    player.Position({650, 440}).Paint(DARKGREEN).Speed(240.0f);
-    player.Scale({1.6f, 1.6f}, {650, 440});
+    scene.Spawn<shapes::Player>()
+        .Position({650, 440})
+        .Paint(DARKGREEN)
+        .Speed(240.0f)
+        .Scale({1.6f, 1.6f});
 
     // Podpisy i punkty obrotu/skalowania są rysowane już we współrzędnych ekranu.
     scene.OnDraw([](PrimitiveRenderer&) {

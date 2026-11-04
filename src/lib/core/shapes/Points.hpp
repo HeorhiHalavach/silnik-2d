@@ -7,13 +7,13 @@
 #include <utility>
 #include <vector>
 
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 #include "Line.hpp"
 
 namespace shapes {
 
 /** @brief Zbiór punktów, których pozycje są lokalne względem obiektu. */
-class Points : public Shape<Points> {
+class Points : public Entity {
   public:
     /**
      * @brief Ustawia pozycje punktów.

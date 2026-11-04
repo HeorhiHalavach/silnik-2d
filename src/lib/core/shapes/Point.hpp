@@ -4,13 +4,13 @@
  */
 #pragma once
 
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 #include "Line.hpp"
 
 namespace shapes {
 
 /** @brief Pojedynczy punkt rysowany w pozycji obiektu. */
-class Point : public Shape<Point> {
+class Point : public Entity {
   public:
     /** @copydoc Entity::Contains */
     bool Contains(Vector2 point) const override {

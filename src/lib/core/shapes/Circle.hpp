@@ -4,12 +4,12 @@
  */
 #pragma once
 
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 
 namespace shapes {
 
 /** @brief Okrąg lub koło; pozycja obiektu oznacza środek. */
-class Circle : public Shape<Circle> {
+class Circle : public Entity {
   public:
     /**
      * @brief Ustawia promień.

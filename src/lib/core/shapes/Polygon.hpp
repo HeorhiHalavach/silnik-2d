@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "../../render/Geometry.hpp"
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 
 namespace shapes {
 
@@ -17,7 +17,7 @@ namespace shapes {
  * można to sprawdzić przez Simple(). Fill() wypełnia wielokąt algorytmem scanline
  * z kontrolą parzystości.
  */
-class Polygon : public Shape<Polygon> {
+class Polygon : public Entity {
   public:
     /**
      * @brief Ustawia wierzchołki obwodu.

@@ -4,12 +4,12 @@
  */
 #pragma once
 
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 
 namespace shapes {
 
 /** @brief Trójkąt z wierzchołkami lokalnymi względem pozycji obiektu. */
-class Triangle : public Shape<Triangle> {
+class Triangle : public Entity {
   public:
     /**
      * @brief Ustawia trzy wierzchołki trójkąta.

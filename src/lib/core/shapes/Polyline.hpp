@@ -6,7 +6,7 @@
 
 #include <vector>
 
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 #include "Line.hpp"
 
 namespace shapes {
@@ -15,7 +15,7 @@ namespace shapes {
  * @brief Otwarta lub zamknięta łamana o lokalnych współrzędnych wierzchołków.
  * @details W przeciwieństwie do Polygon nie sprawdza samoprzecięć.
  */
-class Polyline : public Shape<Polyline> {
+class Polyline : public Entity {
   public:
     /**
      * @brief Ustawia wierzchołki łamanej.

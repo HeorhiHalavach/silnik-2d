@@ -4,7 +4,7 @@
  */
 #pragma once
 
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 
 namespace shapes {
 
@@ -13,7 +13,7 @@ namespace shapes {
  * @details Przydaje się np. dla postaci złożonej z kilku figur albo układu obiektów
  * poruszających się razem.
  */
-class Group : public Shape<Group> {
+class Group : public Entity {
   public:
     /**
      * @brief Grupa nie ma własnego obszaru trafienia.

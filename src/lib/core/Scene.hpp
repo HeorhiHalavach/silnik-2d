@@ -22,8 +22,8 @@ class Scene {
   public:
     /**
      * @brief Dodaje obiekt do sceny.
-     * @tparam T Kształt z przestrzeni nazw @ref shapes (lista w opisie klasy Shape)
-     * albo własna klasa dziedzicząca po Shape<T>, np. `Spawn<shapes::Rect>()`.
+     * @tparam T Kształt z przestrzeni nazw @ref shapes albo własna klasa dziedzicząca
+     * po Entity, np. `Spawn<shapes::Rect>()`.
      * @return Referencja do nowego obiektu, ważna przez cały czas życia sceny.
      */
     template <typename T> T& Spawn() {

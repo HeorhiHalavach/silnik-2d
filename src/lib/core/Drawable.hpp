@@ -42,6 +42,38 @@ class Drawable {
     int Layer() const { return layer_; }
 
     /**
+     * @brief Ustawia warstwę wśród obiektów tego samego rodzica.
+     * @param layer Numer warstwy.
+     * @return Ten sam obiekt jako jego konkretny typ (deducing this, C++23).
+     */
+    template <typename Self> Self& Layer(this Self& self, int layer) {
+        self.layer_ = layer;
+        return self;
+    }
+
+    /**
+     * @brief Ustawia kolor rysowania.
+     * @param color Kolor.
+     * @return Ten sam obiekt jako jego konkretny typ.
+     */
+    template <typename Self> Self& Paint(this Self& self, Color color) {
+        self.color_ = color;
+        return self;
+    }
+
+    /**
+     * @brief Włącza lub wyłącza wypełnienie figury.
+     * @details Działa w Rect, Triangle, Circle, Ellipse i Polygon; pozostałe kształty
+     * je ignorują.
+     * @param value Czy figura ma być wypełniona.
+     * @return Ten sam obiekt jako jego konkretny typ.
+     */
+    template <typename Self> Self& Fill(this Self& self, bool value = true) {
+        self.filled_ = value;
+        return self;
+    }
+
+    /**
      * @brief Ustawia obiekty od najniższej warstwy, zachowując kolejność dodania.
      * @param objects Obiekty o wspólnym rodzicu.
      * @return Wskaźniki w kolejności rysowania.

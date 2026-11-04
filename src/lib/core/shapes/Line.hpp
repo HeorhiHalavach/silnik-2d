@@ -4,12 +4,12 @@
  */
 #pragma once
 
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 
 namespace shapes {
 
 /** @brief Odcinek, którego końce są określone względem pozycji obiektu. */
-class Line : public Shape<Line> {
+class Line : public Entity {
   public:
     /**
      * @brief Ustawia początek odcinka.

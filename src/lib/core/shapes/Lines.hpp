@@ -7,13 +7,13 @@
 #include <utility>
 #include <vector>
 
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 #include "Line.hpp"
 
 namespace shapes {
 
 /** @brief Zbiór niezależnych odcinków tworzonych z kolejnych par wierzchołków. */
-class Lines : public Shape<Lines> {
+class Lines : public Entity {
   public:
     /**
      * @brief Ustawia pary końców odcinków.

@@ -27,7 +27,33 @@
  * - OnMouseEnter / OnMouseLeave - kursor wszedł na obiekt / zszedł z niego,
  * - OnKeyPressed - naciśnięcie konkretnego klawisza.
  *
- * Metody ustawiające zdarzenia z dostępem do konkretnego typu obiektu dodaje Shape<T>.
+ * @section entity_lancuch Łańcuchowanie
+ * Settery i zdarzenia z klas bazowych (Position(), Rotate(), Paint(), OnClick() itd.) używają
+ * jawnego parametru obiektu z C++23 (`this Self& self`). Zwracają więc konkretny typ, na którym
+ * je wywołano, a callbacki zdarzeń dostają ten typ jako argument:
+ * @code{.cpp}
+ * scene.Spawn<shapes::Circle>()
+ *     .Position({400, 300})
+ *     .Rotate(PI / 4)                   // nadal shapes::Circle&
+ *     .Radius(30)                       // setter samego okręgu
+ *     .OnClick([](shapes::Circle& self) { self.Radius(50); });
+ * @endcode
+ *
+ * @section entity_wlasne Własny kształt
+ * Wystarczy dziedziczyć po Entity i nadpisać Contains() oraz Draw(). Umieszczenie klasy
+ * w przestrzeni nazw `shapes` sprawia, że edytor podpowie ją razem z wbudowanymi.
+ * @code{.cpp}
+ * namespace shapes {
+ * class Star : public Entity {
+ *   public:
+ *     bool Contains(Vector2 point) const override;
+ *   protected:
+ *     void Draw(PrimitiveRenderer& renderer) const override;
+ * };
+ * } // namespace shapes
+ *
+ * scene.Spawn<shapes::Star>().Position({100, 100}).Paint(GOLD);
+ * @endcode
  */
 class Entity : public Updatable, public Drawable, public Transformable {
   public:
@@ -36,8 +62,8 @@ class Entity : public Updatable, public Drawable, public Transformable {
 
     /**
      * @brief Tworzy dziecko wybranego typu.
-     * @tparam T Kształt z przestrzeni nazw @ref shapes (lista w opisie klasy Shape)
-     * albo własna klasa dziedzicząca po Shape<T>, np. `Spawn<shapes::Circle>()`.
+     * @tparam T Kształt z przestrzeni nazw @ref shapes albo własna klasa dziedzicząca
+     * po Entity, np. `Spawn<shapes::Circle>()`.
      * @return Referencja do nowego dziecka, do dalszej konfiguracji.
      */
     template <typename T> T& Spawn() {
@@ -49,10 +75,15 @@ class Entity : public Updatable, public Drawable, public Transformable {
     }
 
     /**
-     * @brief Pobiera pozycję lokalną względem rodzica.
-     * @return Pozycja lokalna.
+     * @brief Wykonuje konfigurację dzieci i pozwala kontynuować łańcuch.
+     * @param setup Funkcja otrzymująca ten obiekt jako jego konkretny typ
+     * (dzieci tworzy się w niej przez Spawn<T>()).
+     * @return Ten sam obiekt.
      */
-    Vector2 Position() const { return {transform_.tx, transform_.ty}; }
+    template <typename Self> Self& Children(this Self& self, const Callback<Self>& setup) {
+        setup(self);
+        return self;
+    }
 
     /**
      * @brief Oblicza pozycję obiektu w układzie ekranu (z uwzględnieniem rodziców).

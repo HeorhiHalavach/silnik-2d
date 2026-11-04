@@ -4,12 +4,12 @@
  */
 #pragma once
 
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 
 namespace shapes {
 
 /** @brief Prostokąt, którego pozycja oznacza lewy górny róg. */
-class Rect : public Shape<Rect> {
+class Rect : public Entity {
   public:
     /**
      * @brief Ustawia szerokość i wysokość prostokąta.

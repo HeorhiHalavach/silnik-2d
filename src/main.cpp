@@ -7,7 +7,7 @@
  * @mainpage Silnik 2D
  *
  * @section cel Cel projektu
- * Silnik 2D napisany w C++20 z użyciem raylib. Biblioteka udostępnia sceny,
+ * Silnik 2D napisany w C++23 z użyciem raylib. Biblioteka udostępnia sceny,
  * obiekty z hierarchią dzieci, wejście z klawiatury i myszy oraz renderer
  * prymitywów. Program zawiera demonstrację funkcji z laboratoriów 1-4.
  *
@@ -23,8 +23,8 @@
  * @section budowa Najważniejsze części
  * - @ref Engine zarządza oknem, pętlą i przełączaniem scen.
  * - @ref Scene przechowuje obiekty aktywnego ekranu.
- * - @ref Entity łączy drzewo obiektów z @ref Updatable, @ref Drawable i @ref Transformable.
- * - @ref Shape dodaje settery oraz zdarzenia z dostępem do typu konkretnej figury.
+ * - @ref Entity łączy drzewo obiektów z @ref Updatable, @ref Drawable i @ref Transformable;
+ *   ich settery i zdarzenia zwracają konkretny typ figury dzięki deducing this (C++23).
  * - @ref PrimitiveRenderer rysuje na ekranie albo na @ref Bitmap.
  * - @ref shapes::Canvas udostępnia bitmapę do algorytmów wypełniania.
  *

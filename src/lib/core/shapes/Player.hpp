@@ -6,7 +6,7 @@
 
 #include <cmath>
 
-#include "../Shape.hpp"
+#include "../Entity.hpp"
 
 namespace shapes {
 
@@ -15,7 +15,7 @@ namespace shapes {
  * @details Kadłub, skrzydła i kabina powstają z prymitywów renderera.
  * Ruch uwzględnia czas klatki i ma jednakową prędkość także po przekątnej.
  */
-class Player : public Shape<Player> {
+class Player : public Entity {
   public:
     /**
      * @brief Ustawia prędkość gracza w pikselach na sekundę.
