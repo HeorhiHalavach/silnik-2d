@@ -388,8 +388,8 @@ class Engine {
 
     std::map<std::string, Scene> scenes_; /**< Utworzone sceny według nazw. */
     std::string active_;                  /**< Nazwa aktywnej sceny. */
-    std::string pending_; /**< Scena, na którą przełączamy po zakończeniu klatki. */
-    std::string start_;   /**< Scena startowa wybrana przez StartScene(). */
+    std::string pending_;                 /**< Scena, na którą przełączamy po zakończeniu klatki. */
+    std::string start_;                   /**< Scena startowa wybrana przez StartScene(). */
     /** Sceny zarejestrowane makrem SCENE, tworzone w Run(). */
     std::map<std::string, std::function<void(Scene&)>> registered_;
     PrimitiveRenderer primitives_; /**< Renderer używany do rysowania scen. */

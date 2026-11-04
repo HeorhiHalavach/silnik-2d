@@ -54,8 +54,7 @@ struct AffineMatrix2D {
      */
     std::optional<Vector2> InverseApply(Vector2 point) const {
         const float determinant = a * d - b * c;
-        if (!std::isfinite(determinant) || std::fabs(determinant) <= 1e-8f)
-            return std::nullopt;
+        if (!std::isfinite(determinant) || std::fabs(determinant) <= 1e-8f) return std::nullopt;
         const float x = point.x - tx;
         const float y = point.y - ty;
         return Vector2{(d * x - c * y) / determinant, (-b * x + a * y) / determinant};
@@ -63,17 +62,23 @@ struct AffineMatrix2D {
 
     /** @brief Łączy macierze: najpierw działa other, potem bieżąca macierz. */
     AffineMatrix2D operator*(const AffineMatrix2D& other) const {
+        // każde pole wyniku w osobnym wierszu
+        // clang-format off
         return {a * other.a + c * other.b,
                 b * other.a + d * other.b,
                 a * other.c + c * other.d,
                 b * other.c + d * other.d,
                 a * other.tx + c * other.ty + tx,
                 b * other.tx + d * other.ty + ty};
+        // clang-format on
     }
 
     /** @brief Macierz 4x4 w układzie kolumnowym wymaganym przez rlgl. */
     std::array<float, 16> RlglMatrix() const {
+        // dwie kolumny macierzy 4x4 na wiersz
+        // clang-format off
         return {a, b, 0.0f, 0.0f, c, d, 0.0f, 0.0f,
                 0.0f, 0.0f, 1.0f, 0.0f, tx, ty, 0.0f, 1.0f};
+        // clang-format on
     }
 };
