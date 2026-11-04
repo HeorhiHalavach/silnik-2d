@@ -1,11 +1,11 @@
 /**
  * @file TransformScene.cpp
- * @brief Pokaz figur przed i po transformacji oraz sterowania graczem z laboratorium 4.
+ * @brief Pokaz figur przed i po transformacji z laboratorium 4.
  */
 
 #include "lib/core/Engine.hpp"
 
-/** @brief Tworzy trzy porównania transformacji i sterowany statek. */
+/** @brief Tworzy trzy porównania transformacji. */
 SCENE("transformacje") {
     // Warstwa 1 rysuje szare kontury stanu przed transformacją nad kolorowymi figurami.
     scene.Spawn<shapes::Rect>().Position({170, 150}).Size({170, 90}).Paint(GRAY).Layer(1);
@@ -38,19 +38,12 @@ SCENE("transformacje") {
         })
         .Rotate(PI / 5.0f); // wokół własnej pozycji (200, 440)
 
-    scene.Spawn<shapes::Player>()
-        .Position({650, 440})
-        .Paint(DARKGREEN)
-        .Speed(240.0f)
-        .Scale({1.6f, 1.6f});
-
     // Podpisy i punkty obrotu/skalowania są rysowane już we współrzędnych ekranu.
     scene.OnDraw([](PrimitiveRenderer&) {
         ::DrawText("Szary kontur = PRZED     Kolor = PO", 30, 70, 20, DARKGRAY);
         ::DrawText("Obrot prostokata o 30 stopni (kliknij)", 80, 300, 18, DARKGRAY);
         ::DrawText("Skalowanie kola: X 1.5, Y 0.6", 520, 300, 18, DARKGRAY);
         ::DrawText("Obrot grupy razem z dziecmi", 80, 560, 18, DARKGRAY);
-        ::DrawText("Statek: WASD lub strzalki", 520, 560, 18, DARKGRAY);
         ::DrawCircle(255, 195, 3, MAROON);
         ::DrawCircle(650, 200, 3, MAROON);
         ::DrawCircle(200, 440, 3, MAROON);

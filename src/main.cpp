@@ -42,7 +42,7 @@
  * uruchamia boundary fill, a R przywraca kontury.
  * Na scenie `transformacje` szary kontur pokazuje stan przed obrotem lub skalowaniem,
  * a kolorowa figura stan po; grupa obraca się razem z dziećmi. LPM zmienia kolor
- * obróconego prostokąta, a WASD/strzałki kierują statkiem gracza.
+ * obróconego prostokąta.
  *
  * @section dokumentacja Dokumentacja
  * Dokumentację HTML generuje polecenie `docs` (devenv) albo, w katalogu głównym projektu:

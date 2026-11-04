@@ -26,7 +26,6 @@
  * | @ref shapes::Polygon  | wielokąt (wypełnianie scanline)       | `Vertices()`, `Edges()`               |
  * | @ref shapes::Canvas   | bitmapę w RAM (flood/boundary fill)   | `Size()`, `Background()`, `Clear()`, `Content()`, `Pixels()` |
  * | @ref shapes::Group    | nic - grupuje i przesuwa dzieci       | -                                     |
- * | @ref shapes::Player   | statek sterowany klawiaturą           | `Speed()`                             |
  *
  * Metody wspólne ma każdy kształt (z klas Transformable, Drawable, Updatable i Entity):
  * Position(), Translate(), Rotate(), Scale(), Paint(), Layer(), Fill(), Children()
@@ -47,6 +46,5 @@
 #include "shapes/Points.hpp"
 #include "shapes/Polygon.hpp"
 #include "shapes/Polyline.hpp"
-#include "shapes/Player.hpp"
 #include "shapes/Rect.hpp"
 #include "shapes/Triangle.hpp"
