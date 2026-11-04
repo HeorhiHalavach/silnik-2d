@@ -16,7 +16,7 @@
 #include "../render/PrimitiveRenderer.hpp"
 #include "Input.hpp"
 #include "Scene.hpp"
-#include "Shapes.hpp"
+#include "Shapes.hpp" // IWYU pragma: export
 
 /**
  * @brief Główny obiekt silnika zarządzający oknem, scenami, wejściem i pętlą gry.

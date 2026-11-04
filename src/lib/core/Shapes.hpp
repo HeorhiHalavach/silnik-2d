@@ -36,6 +36,8 @@
  */
 // clang-format on
 
+// Nagłówek zbiorczy: dołączone pliki są częścią jego interfejsu (dla clangd/IWYU).
+// IWYU pragma: begin_exports
 #include "shapes/Canvas.hpp"
 #include "shapes/Circle.hpp"
 #include "shapes/Ellipse.hpp"
@@ -48,3 +50,4 @@
 #include "shapes/Polyline.hpp"
 #include "shapes/Rect.hpp"
 #include "shapes/Triangle.hpp"
+// IWYU pragma: end_exports
