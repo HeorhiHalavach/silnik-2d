@@ -1,5 +1,5 @@
 /**
- * @file Transform2D.hpp
+ * @file AffineMatrix2D.hpp
  * @brief Przekształcenie afiniczne punktów 2D.
  */
 #pragma once
@@ -14,7 +14,7 @@
  * @brief Macierz przekształcenia lokalnych współrzędnych na współrzędne rodzica.
  * @details Dla punktu (x, y) wynikiem jest (a*x + c*y + tx, b*x + d*y + ty).
  */
-struct Transform2D {
+struct AffineMatrix2D {
     float a = 1.0f;
     float b = 0.0f;
     float c = 0.0f;
@@ -22,27 +22,36 @@ struct Transform2D {
     float tx = 0.0f;
     float ty = 0.0f;
 
-    static Transform2D Translation(Vector2 offset) {
-        Transform2D result;
+    /** @brief Tworzy macierz przesunięcia o podany wektor. */
+    static AffineMatrix2D Translation(Vector2 offset) {
+        AffineMatrix2D result;
         result.tx = offset.x;
         result.ty = offset.y;
         return result;
     }
 
-    static Transform2D Rotation(float radians) {
+    /** @brief Tworzy macierz obrotu wokół początku układu o kąt w radianach. */
+    static AffineMatrix2D Rotation(float radians) {
         const float cosine = std::cos(radians);
         const float sine = std::sin(radians);
         return {cosine, sine, -sine, cosine, 0.0f, 0.0f};
     }
 
-    static Transform2D Scaling(Vector2 factors) {
+    /** @brief Tworzy macierz skalowania osi X i Y wokół początku układu. */
+    static AffineMatrix2D Scaling(Vector2 factors) {
         return {factors.x, 0.0f, 0.0f, factors.y, 0.0f, 0.0f};
     }
 
+    /** @brief Przelicza punkt lokalny na układ rodzica. */
     Vector2 Apply(Vector2 point) const {
         return {a * point.x + c * point.y + tx, b * point.x + d * point.y + ty};
     }
 
+    /**
+     * @brief Przelicza punkt z układu rodzica na układ lokalny.
+     * @return Punkt lokalny albo std::nullopt, gdy wyznacznik macierzy jest
+     * nieokreślony lub zbyt bliski zeru, by bezpiecznie odwrócić macierz.
+     */
     std::optional<Vector2> InverseApply(Vector2 point) const {
         const float determinant = a * d - b * c;
         if (!std::isfinite(determinant) || std::fabs(determinant) <= 1e-8f)
@@ -52,7 +61,8 @@ struct Transform2D {
         return Vector2{(d * x - c * y) / determinant, (-b * x + a * y) / determinant};
     }
 
-    Transform2D operator*(const Transform2D& other) const {
+    /** @brief Łączy macierze: najpierw działa other, potem bieżąca macierz. */
+    AffineMatrix2D operator*(const AffineMatrix2D& other) const {
         return {a * other.a + c * other.b,
                 b * other.a + d * other.b,
                 a * other.c + c * other.d,

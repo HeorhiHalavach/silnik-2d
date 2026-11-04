@@ -149,7 +149,7 @@ SCENE("prymitywy") {
                                           {{460, 380}, {460, 340}},
                                           {{460, 340}, {340, 380}},
                                           {{340, 380}, {340, 340}}};
-    // odcinki rysowane metodą LineSegment::Render - te same nachylenia dwoma algorytmami
+    // odcinki rysowane metodą LineSegment::Draw - te same nachylenia dwoma algorytmami
     const std::vector<LineSegment> library{{{830, 510}, {980, 545}}, {{830, 525}, {865, 600}}};
     const std::vector<LineSegment> incremental{{{845, 510}, {995, 545}}, {{845, 525}, {880, 600}}};
 
@@ -158,21 +158,21 @@ SCENE("prymitywy") {
         renderer.Paint(DARKGREEN).Incremental(false).Polyline(diamond, true);
         renderer.Paint(MAROON).Incremental().Polyline(bowTie);
 
-        renderer.Paint(BLUE).Incremental(false);
+        renderer.Paint(BLUE);
         for (const LineSegment& segment : library)
-            segment.Render(renderer); // algorytm domyślny (raylib)
-        renderer.Paint(RED).Incremental(true);
+            segment.Draw(renderer); // algorytm domyślny (raylib)
+        renderer.Paint(RED);
         for (const LineSegment& segment : incremental)
-            segment.Render(renderer); // algorytm przyrostowy
+            segment.Draw(renderer, true); // algorytm przyrostowy
 
         renderer.Paint(BLACK);
         for (const LineSegment& segment : library) {
-            segment.From().Render(renderer); // końce odcinków jako Point2D
-            segment.To().Render(renderer);
+            segment.From().Draw(renderer); // końce odcinków jako Point2D
+            segment.To().Draw(renderer);
         }
 
         ::DrawText("lamane: Point2D / LineSegment", 335, 388, 10, GRAY);
-        ::DrawText("Render(): raylib / przyrostowy", 830, 608, 10, GRAY);
+        ::DrawText("Draw(): raylib / przyrostowy", 830, 608, 10, GRAY);
         ::DrawText("strzalki - prostokat, L - warstwa, PPM - odcinek, "
                    "SPACJA - algorytm, LPM - klik",
                    20, 630, 18, GRAY);

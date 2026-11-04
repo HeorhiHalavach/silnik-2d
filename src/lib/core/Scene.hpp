@@ -69,7 +69,11 @@ class Scene {
      * @param renderer Renderer prymitywów.
      */
     void Draw(PrimitiveRenderer& renderer) const {
-        for (const Entity* entity : Entity::ByLayer(entities_))
+        std::vector<const Drawable*> order;
+        order.reserve(entities_.size());
+        for (const auto& entity : entities_)
+            order.push_back(entity.get());
+        for (const Drawable* entity : Drawable::ByLayer(std::move(order)))
             entity->Render(renderer);
         if (draw_) draw_(renderer.Reset().TargetScreen());
     }

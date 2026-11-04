@@ -8,7 +8,6 @@
 #include "Geometry.hpp"
 
 #include <algorithm>
-#include <cmath>
 
 #include "PrimitiveRenderer.hpp"
 
@@ -38,28 +37,9 @@ bool OnSegment(Point2D a, Point2D b, Point2D c) {
 
 } // namespace
 
-void Point2D::Render(PrimitiveRenderer& renderer) const {
+const Point2D& Point2D::Draw(PrimitiveRenderer& renderer) const {
     renderer.Point(*this);
-}
-
-void Point2D::Translate(Vector2 offset) {
-    x_ += offset.x;
-    y_ += offset.y;
-}
-
-void Point2D::Rotate(float radians, Vector2 pivot) {
-    const float dx = x_ - pivot.x;
-    const float dy = y_ - pivot.y;
-    const float cosine = std::cos(radians);
-    const float sine = std::sin(radians);
-
-    x_ = pivot.x + dx * cosine - dy * sine;
-    y_ = pivot.y + dx * sine + dy * cosine;
-}
-
-void Point2D::Scale(Vector2 factors, Vector2 pivot) {
-    x_ = pivot.x + (x_ - pivot.x) * factors.x;
-    y_ = pivot.y + (y_ - pivot.y) * factors.y;
+    return *this;
 }
 
 /**
@@ -80,23 +60,9 @@ bool LineSegment::Intersects(const LineSegment& other) const {
            (d3 == 0 && OnSegment(c, d, a)) || (d4 == 0 && OnSegment(c, d, b));
 }
 
-void LineSegment::Render(PrimitiveRenderer& renderer) const {
-    renderer.Line(from_, to_);
-}
-
-void LineSegment::Translate(Vector2 offset) {
-    from_.Translate(offset);
-    to_.Translate(offset);
-}
-
-void LineSegment::Rotate(float radians, Vector2 pivot) {
-    from_.Rotate(radians, pivot);
-    to_.Rotate(radians, pivot);
-}
-
-void LineSegment::Scale(Vector2 factors, Vector2 pivot) {
-    from_.Scale(factors, pivot);
-    to_.Scale(factors, pivot);
+const LineSegment& LineSegment::Draw(PrimitiveRenderer& renderer, bool incremental) const {
+    renderer.Incremental(incremental).Line(from_, to_);
+    return *this;
 }
 
 bool IsSimplePolygon(std::span<const Point2D> vertices) {

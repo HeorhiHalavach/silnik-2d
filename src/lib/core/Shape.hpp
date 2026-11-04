@@ -37,13 +37,15 @@
  * | @ref shapes::Polygon  | wielokąt (wypełnianie scanline)       | `Vertices()`, `Edges()`               |
  * | @ref shapes::Canvas   | bitmapę w RAM (flood/boundary fill)   | `Size()`, `Background()`, `Content()` |
  * | @ref shapes::Group    | nic - grupuje i przesuwa dzieci       | -                                     |
- * | @ref shapes::Player   | sterowany klawiaturą trójkąt          | `Speed()`                             |
+ * | @ref shapes::Player   | statek sterowany klawiaturą           | `Speed()`                             |
  *
- * Metody wspólne (z tej klasy) ma każdy kształt: Position(), Move(), Translate(),
- * Rotate(), Scale(), Paint(), Layer(),
- * Children() oraz zdarzenia OnUpdate(), OnClick(), OnMouseEnter(), OnMouseLeave()
+ * Metody wspólne ma każdy kształt: Position(), Move(), Paint(), Layer(),
+ * Children() oraz odziedziczone Translate(), Rotate(), Scale(). Zdarzenia ustawia się
+ * przez OnUpdate(), OnClick(), OnMouseEnter(), OnMouseLeave()
  * i OnKeyPressed(). Fill() działa w Rect, Triangle, Circle, Ellipse i Polygon, a Incremental()
  * (własny algorytm odcinka) w Line, Lines, Polyline i Polygon.
+ * Translate(), Rotate() i Scale() zwracają Transformable&, dlatego w jednym łańcuchu
+ * setter konkretnego kształtu, np. Radius(), należy wywołać przed nimi.
  *
  * @code{.cpp}
  * scene.Spawn<shapes::Circle>()
@@ -77,7 +79,7 @@
  * @endcode
  */
 // clang-format on
-template <typename T> class Shape : public Entity, public ShapeObject {
+template <typename T> class Shape : public Entity {
   public:
     /** Getter Position() z Entity - inaczej przesłoniłby go setter o tej samej nazwie. */
     using Entity::Position;
@@ -99,24 +101,8 @@ template <typename T> class Shape : public Entity, public ShapeObject {
      * @return Ten sam kształt.
      */
     T& Move(Vector2 offset) {
-        transform_.tx += offset.x;
-        transform_.ty += offset.y;
+        Translate(offset);
         return Self();
-    }
-
-    /** @brief Przesuwa obiekt w układzie jego rodzica. */
-    void Translate(Vector2 offset) override { Move(offset); }
-
-    /** @brief Obraca obiekt i jego dzieci wokół punktu w układzie rodzica. */
-    void Rotate(float radians, Vector2 pivot) override {
-        transform_ = Transform2D::Translation(pivot) * Transform2D::Rotation(radians) *
-                     Transform2D::Translation({-pivot.x, -pivot.y}) * transform_;
-    }
-
-    /** @brief Skaluje obiekt i jego dzieci wokół punktu w układzie rodzica. */
-    void Scale(Vector2 factors, Vector2 pivot) override {
-        transform_ = Transform2D::Translation(pivot) * Transform2D::Scaling(factors) *
-                     Transform2D::Translation({-pivot.x, -pivot.y}) * transform_;
     }
 
     /**
@@ -225,7 +211,7 @@ template <typename T> class Shape : public Entity, public ShapeObject {
     /**
      * @brief Opakowuje funkcję zdarzenia tak, by otrzymywała obiekt jako T&.
      * @param callback Funkcja zdarzenia.
-     * @return Funkcja bez argumentów do zapisania w Entity.
+     * @return Funkcja bez argumentów do zapisania w Updatable.
      */
     std::function<void()> Bind(std::function<void(T&)> callback) {
         return [this, callback = std::move(callback)] { callback(Self()); };
