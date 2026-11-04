@@ -35,7 +35,7 @@ class Lines : public Entity {
         return *this;
     }
 
-    /** @copydoc Entity::Contains */
+    /** @copydoc Updatable::Contains */
     bool Contains(Vector2 point) const override {
         for (std::size_t i = 0; i + 1 < vertices_.size(); i += 2)
             if (::CheckCollisionPointLine(point, World(vertices_[i]), World(vertices_[i + 1]),
@@ -45,7 +45,7 @@ class Lines : public Entity {
     }
 
   protected:
-    /** @copydoc Entity::Draw */
+    /** @copydoc Drawable::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
         renderer.Paint(color_).Incremental(incremental_).Lines(vertices_);
     }

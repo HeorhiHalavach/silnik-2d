@@ -48,7 +48,7 @@ class Polyline : public Entity {
     }
 
     /**
-     * @copydoc Entity::Contains
+     * @copydoc Updatable::Contains
      * @details Łamana zamknięta jest traktowana jak wielokąt, otwarta - jak zbiór odcinków.
      */
     bool Contains(Vector2 point) const override {
@@ -62,7 +62,7 @@ class Polyline : public Entity {
     }
 
   protected:
-    /** @copydoc Entity::Draw */
+    /** @copydoc Drawable::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
         renderer.Paint(color_).Incremental(incremental_).Polyline(vertices_, closed_);
     }

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(silnik LANGUAGES C CXX)
 
-# C++23: jawny parametr obiektu (deducing this) w setterach Entity.
+# C++23: jawny parametr obiektu (deducing this) w setterach klas bazowych.
 # Wymaga GCC 14+, Clang 18+ albo MSVC z Visual Studio 2022 17.2+.
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

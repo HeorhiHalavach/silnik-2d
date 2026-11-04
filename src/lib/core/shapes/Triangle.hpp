@@ -25,13 +25,13 @@ class Triangle : public Entity {
         return *this;
     }
 
-    /** @copydoc Entity::Contains */
+    /** @copydoc Updatable::Contains */
     bool Contains(Vector2 point) const override {
         return ::CheckCollisionPointTriangle(point, World(a_), World(b_), World(c_));
     }
 
   protected:
-    /** @copydoc Entity::Draw */
+    /** @copydoc Drawable::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
         renderer.Paint(color_).Fill(filled_).Triangle(a_, b_, c_);
     }

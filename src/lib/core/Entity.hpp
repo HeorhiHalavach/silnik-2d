@@ -1,12 +1,16 @@
 /**
  * @file Entity.hpp
- * @brief Abstrakcyjna baza obiektów sceny: drzewo dzieci i współrzędne.
+ * @brief Abstrakcyjna baza obiektów sceny: drzewo, współrzędne i przebieg klatki.
  */
 #pragma once
 
 #include <raylib.h>
+#include <rlgl.h>
+
+#include <cstddef>
 #include <memory>
 #include <optional>
+#include <utility>
 #include <vector>
 
 #include "Drawable.hpp"
@@ -18,8 +22,9 @@
  * @details Obiekty tworzą drzewo: każdy może mieć dzieci (Spawn<T>()), a dzieci kolejne
  * dzieci. Pozycja dziecka jest względna wobec rodzica, więc przesunięcie rodzica przesuwa
  * całe poddrzewo. Dzieci są zawsze rysowane nad swoim rodzicem.
- * Aktualizację i zdarzenia zapewnia Updatable, rysowanie i warstwy Drawable,
- * a macierz oraz jej zmiany Transformable.
+ * Updatable obsługuje własne zdarzenia, Drawable rysuje własny kształt i sortuje
+ * warstwy, a Transformable przechowuje i zmienia macierz. Entity aktualizuje i
+ * rysuje dzieci oraz nakłada macierz podczas rysowania.
  *
  * Obsługiwane zdarzenia (sprawdzane w Update()):
  * - OnUpdate - co klatkę,
@@ -40,7 +45,8 @@
  * @endcode
  *
  * @section entity_wlasne Własny kształt
- * Wystarczy dziedziczyć po Entity i nadpisać Contains() oraz Draw(). Umieszczenie klasy
+ * Wystarczy dziedziczyć po Entity i nadpisać Draw(). Dla reakcji na mysz należy
+ * nadpisać także Contains(); domyślnie obiekt nie ma obszaru trafienia. Umieszczenie klasy
  * w przestrzeni nazw `shapes` sprawia, że edytor podpowie ją razem z wbudowanymi.
  * @code{.cpp}
  * namespace shapes {
@@ -86,6 +92,36 @@ class Entity : public Updatable, public Drawable, public Transformable {
     }
 
     /**
+     * @brief Obsługuje własne zdarzenia, a następnie aktualizuje dzieci.
+     * @param dt Czas od poprzedniej klatki w sekundach.
+     * @param input Stan klawiatury i myszy.
+     */
+    void Update(float dt, const Input& input) override {
+        Updatable::Update(dt, input);
+        // Callback może dodać dziecko, dlatego rozmiar sprawdzamy w każdej iteracji.
+        for (std::size_t i = 0; i < children_.size(); ++i)
+            children_[i]->Update(dt, input);
+    }
+
+    /**
+     * @brief Nakłada lokalną macierz, rysuje własny kształt, a potem dzieci według warstw.
+     * @param renderer Renderer prymitywów.
+     */
+    void Render(PrimitiveRenderer& renderer) const override {
+        const auto matrix = transform_.RlglMatrix();
+        rlPushMatrix();
+        rlMultMatrixf(matrix.data());
+        Drawable::Render(renderer);
+        std::vector<const Drawable*> order;
+        order.reserve(children_.size());
+        for (const auto& child : children_)
+            order.push_back(child.get());
+        for (const Drawable* child : Drawable::ByLayer(std::move(order)))
+            child->Render(renderer);
+        rlPopMatrix();
+    }
+
+    /**
      * @brief Oblicza pozycję obiektu w układzie ekranu (z uwzględnieniem rodziców).
      * @return Pozycja na ekranie.
      */
@@ -113,30 +149,13 @@ class Entity : public Updatable, public Drawable, public Transformable {
      */
     Entity* Parent() const { return parent_; }
 
-    /**
-     * @brief Sprawdza trafienie punktem (np. kursorem) w obiekt.
-     * @param point Punkt w układzie ekranu.
-     * @return true, gdy punkt należy do obiektu.
-     */
-    virtual bool Contains(Vector2 point) const = 0;
-
   protected:
-    /**
-     * @brief Rysuje sam kształt obiektu, bez dzieci.
-     * @details Wierzchołki należy podawać w układzie lokalnym. Render() nakłada
-     * przekształcenia obiektu i jego rodziców podczas rysowania.
-     * @param renderer Renderer z wyczyszczonym pędzlem i celem ustawionym na ekran.
-     */
-    void Draw(PrimitiveRenderer& renderer) const override = 0;
-
     /**
      * @brief Przelicza punkt lokalny (względem pozycji obiektu) na punkt ekranowy.
      * @param local Punkt lokalny.
      * @return Punkt w układzie ekranu.
      */
-    Vector2 World(Vector2 local) const {
-        return WorldTransform().Apply(local);
-    }
+    Vector2 World(Vector2 local) const { return WorldTransform().Apply(local); }
 
     /** @brief Łączy własne przekształcenie z przekształceniami rodziców. */
     AffineMatrix2D WorldTransform() const {
@@ -160,18 +179,6 @@ class Entity : public Updatable, public Drawable, public Transformable {
     }
 
   private:
-    bool HitTest(Vector2 point) const override { return Contains(point); }
-    std::size_t UpdateChildCount() const override { return children_.size(); }
-    Updatable& UpdateChild(std::size_t index) override { return *children_[index]; }
-    AffineMatrix2D LocalTransform() const override { return transform_; }
-    std::vector<const Drawable*> DrawableChildren() const override {
-        std::vector<const Drawable*> result;
-        result.reserve(children_.size());
-        for (const auto& child : children_)
-            result.push_back(child.get());
-        return result;
-    }
-
     Entity* parent_ = nullptr;                      /**< Rodzic albo nullptr. */
     std::vector<std::unique_ptr<Entity>> children_; /**< Dzieci obiektu. */
 };

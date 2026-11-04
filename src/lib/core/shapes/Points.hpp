@@ -25,7 +25,7 @@ class Points : public Entity {
         return *this;
     }
 
-    /** @copydoc Entity::Contains */
+    /** @copydoc Updatable::Contains */
     bool Contains(Vector2 point) const override {
         for (const Vector2& position : positions_)
             if (::CheckCollisionPointCircle(point, World(position), Line::kHitDistance))
@@ -34,7 +34,7 @@ class Points : public Entity {
     }
 
   protected:
-    /** @copydoc Entity::Draw */
+    /** @copydoc Drawable::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
         renderer.Paint(color_).Points(positions_);
     }

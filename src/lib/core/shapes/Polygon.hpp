@@ -55,7 +55,7 @@ class Polygon : public Entity {
      */
     bool Simple() const { return IsSimplePolygon(vertices_); }
 
-    /** @copydoc Entity::Contains */
+    /** @copydoc Updatable::Contains */
     bool Contains(Vector2 point) const override {
         if (!Simple()) return false;
         std::vector<Vector2> world;
@@ -65,7 +65,7 @@ class Polygon : public Entity {
     }
 
   protected:
-    /** @copydoc Entity::Draw */
+    /** @copydoc Drawable::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
         renderer.Paint(color_).Fill(filled_).Incremental(incremental_).Polygon(vertices_);
     }

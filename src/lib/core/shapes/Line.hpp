@@ -41,7 +41,7 @@ class Line : public Entity {
         return *this;
     }
 
-    /** @copydoc Entity::Contains */
+    /** @copydoc Updatable::Contains */
     bool Contains(Vector2 point) const override {
         return ::CheckCollisionPointLine(point, World(from_), World(to_), kHitDistance);
     }
@@ -50,7 +50,7 @@ class Line : public Entity {
     static constexpr int kHitDistance = 4;
 
   protected:
-    /** @copydoc Entity::Draw */
+    /** @copydoc Drawable::Draw */
     void Draw(PrimitiveRenderer& renderer) const override {
         renderer.Paint(color_).Incremental(incremental_).Line(from_, to_);
     }
